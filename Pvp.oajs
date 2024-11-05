@@ -1,0 +1,169 @@
+// PVP Script 
+// Version 1.1
+// Author: Tom Lima
+// This script is a set of usefull tools to do PVP. Enjoy! :D 
+
+// ----------------------------------------------------
+// Bandage Self 
+// ----------------------------------------------------
+// This function apply bands to yourself 
+// and add a timer to screen. 
+
+function BandageSelf(){
+	if (!Orion.DisplayTimerExists(5577)){
+    	if (Player.Hits() < Player.MaxHits())
+    	{
+        	var delay = 15
+        	var dex = Player.MaxStam()
+        	delay = (delay - (dex / 20) + 1) * 1000;
+        
+        	Orion.UseType('0x0E21');
+        	if (Orion.WaitForTarget(2000))
+            	Orion.TargetObject('self');
+        	Orion.AddDisplayTimer("bandage", delay, 'LeftTop', 'Bar', "Bandage", 10, 85, '0x2C', 1, 'orange');
+    	}
+    	else
+    	{
+        	Orion.Print("You are full health");
+    	}
+	}
+}
+
+// -----------------------------------------------
+// Buffs 
+// ------------------------------------------------
+// This Function cast a set of buff skills and 
+// Adds a timer with duration of  each spell.
+
+function Buffs(){
+	// Cast Agility
+	Orion.Cast('Agility');
+	Orion.WaitForTarget(3000);
+	Orion.TargetObject('self');
+	Orion.AddDisplayTimer(1111,240000,'LeftBottom', 'Bar', "Agility", 10,0,'0x2C',1,'orange');
+	Orion.Wait(100);
+	
+	// Cast Strength
+	Orion.Cast('Strength');
+	Orion.WaitForTarget(3000);
+	Orion.TargetObject('self');
+	Orion.AddDisplayTimer(2222,240000, 'LeftBottom', 'Bar', "Strength", 80, 0, '0x2C', 1, 'orange');
+	Orion.Wait(100);
+	
+	// Protection
+	Orion.Cast('Protection');
+	Orion.WaitForTarget(3000);
+	Orion.TargetObject('self');
+	Orion.AddDisplayTimer(3333,240000, 'LeftBottom', 'Bar', "Protection", 150, 0, '0x2C', 1,'orange');
+	Orion.Wait(100);
+	
+	// Cunning
+	Orion.Cast('Cunning');
+	Orion.WaitForTarget(3000); 
+	Orion.TargetObject('self');
+	Orion.AddDisplayTimer(4444, 240000, 'LeftBottom', 'Bar', 'Cunning', 220, 0, '0x2C', 1, 'orange');
+	Orion.Wait(100);
+}
+
+
+// --------------------------------------------------
+// Heal 
+// This function cast Heal spell on yoursel.
+//---------------------------------------------------
+function Heal(){
+  Orion.Cast("Heal"); 
+  Orion.WaitForTarget(3000);
+  Orion.TargetObject('self');
+  Orion.Wait(100);
+}
+
+// ------------------------------------------------------
+// GreaterHeal 
+// This function cast Greater Heal spell on yourself. 
+// -------------------------------------------------------
+function GreaterHeal(){
+ Orion.Say(".quip 2");
+ Orion.Wait("200");
+ Orion.Cast("Greater Heal"); 
+ Orion.WaitForTarget(3000);
+ Orion.TargetObject('self'); 
+ Orion.Wait(100);
+}
+
+
+// -----------------------------------------------
+// CureSelf 
+// This function cast cure spell on yourself
+// ------------------------------------------------
+function CureSelf(){
+  Orion.Say(".quip 2");
+  Orion.Wait(200);	
+  Orion.Cast("Cure"); 
+  Orion.WaitForTarget(3000); 
+  Orion.TargetObject('self'); 
+  Orion.Wait(100);
+}
+
+// -------------------------------------------------
+// Drink Cure 
+// This function drink a cure potion 
+// and add a timer of 15 seconds 
+// -----------------------------------------------------
+function DrinkCure(){
+	Orion.UseType('0x0F07', '0xFFFF'); 
+	Orion.AddDisplayTimer(6666,15000, 'RightTop', 'Bar', "Cure Pot", -30, 30, '0x2C', 1 , 'green' );
+	Orion.Wait(200); 
+	if(Player.Poisoned()){
+	  Orion.Say("MAMEI PO POISON");
+	}else{
+	  Orion.Say("CUREI NO POT");
+	}
+	if(Orion.DisplayTimerExists("bandage")) {
+	   Orion.RemoveDisplayTimer('bandage');
+	}
+}
+
+// ---------------------------------------------------
+// Drink Heal 
+// This function drink a heal potion
+// and add a timer of 15 seconds 
+// ----------------------------------------------------
+function DrinkHeal(){
+	Orion.UseType('0x0F0C', '0xFFFF'); 
+	Orion.AddDisplayTimer(1111,15000, 'RightTop', 'Bar', 'Heal Pot', -100, 30, '0x2C', 1, 'green');
+	if(Orion.DisplayTimerExists('bandage')){
+		Orion.RemoveDisplayTimer("bandage");
+	}
+}
+
+
+// ------------------------------------------------
+// Poisoning 
+// This function applies a poison potion
+// into your weapon
+function Poisoning(){
+	Orion.UseSkill('30'); 
+	Orion.WaitForTarget(1000); 
+	Orion.TargetType('0x0F0A', '0xFFFF'); 
+	Orion.WaitForTarget(1000); 
+	Orion.TargetObject('self');
+	if(Orion.DisplayTimerExists("bandage")){
+	   Orion.RemoveDisplayTimer("bandage")
+	}
+}
+
+
+function displayPoisonStatus() {  
+	var gump = Orion.CreateCustomGump(12345); 
+	gump.Clear(); 
+	
+	while(!Player.Dead()){
+		if (Player.Poisoned()) { 
+			gump.AddText(10, 30,  '82', "Status: Poisoned"); // Red text for poisoned 
+		} else { 
+			gump.AddText(10, 30, '50', "Status: Not Poisoned"); // Green text for not poisoned
+ 		} 
+		gump.Update(); // Update the gump to display the current information
+		Orion.Wait(1000);
+	}
+}

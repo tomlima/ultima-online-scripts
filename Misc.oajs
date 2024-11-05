@@ -1,0 +1,15 @@
+// Misc functions  
+// Version 1.0
+// Author: Tom Lima
+// This script is a set of usefull misc scripts. Enjoy! :D 
+
+
+// ----------------------------------------------------
+// FollowPlayer
+// This function open a target to 
+// follow a player. 
+function FollowPlayer(){
+	Orion.AddObject('target');
+	Orion.WaitWhileTargeting(); 
+	Orion.Follow('target');
+}
