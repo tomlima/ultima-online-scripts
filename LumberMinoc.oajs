@@ -58,7 +58,7 @@ for(var i=0;i<tiles.length;i++)
 			Orion.CancelTarget();
 			//Orion.Print("Found a good tree");
 			Orion.WalkTo(Tile.X(),Tile.Y(),Tile.Z());
-			Orion.UseType('0x0F43');
+			Orion.UseType('0x0F47');
 			Orion.Wait(500);
 			if(Orion.WaitForTarget())
 				{
