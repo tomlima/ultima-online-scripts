@@ -3,6 +3,7 @@
 // Author: Tom Lima
 // This script is a set of usefull tools to do PVP. Enjoy! :D 
 
+
 // ----------------------------------------------------
 // Bandage Self 
 // ----------------------------------------------------
@@ -10,7 +11,7 @@
 // and add a timer to screen. 
 
 function BandageSelf(){
-	if (!Orion.DisplayTimerExists(5577)){
+	if (!Orion.DisplayTimerExists("bandage")){
     	if (Player.Hits() < Player.MaxHits())
     	{
         	var delay = 15
@@ -20,13 +21,84 @@ function BandageSelf(){
         	Orion.UseType('0x0E21');
         	if (Orion.WaitForTarget(2000))
             	Orion.TargetObject('self');
-        	Orion.AddDisplayTimer("bandage", delay, 'LeftTop', 'Bar', "Bandage", 10, 85, '0x2C', 1, 'orange');
+        	Orion.AddDisplayTimer("bandage", delay, 'LeftTop', 'Bar', "Bandage", 600, 150, '0x2C', 1, 'white');
     	}
     	else
     	{
         	Orion.Print("You are full health");
     	}
 	}
+}
+
+// ----------------------------
+// WearQuipOne
+//----------------------------
+// Function to wear quip one by saying .quip 1
+function WearQuipOne(){
+	if(Orion.GetGlobal("quip") != 1){
+		Orion.Say(".quip 1");
+		Orion.SetGlobal("quip", 1);
+	}
+}
+
+//-----------------------------
+// WearQuipTwo 
+//----------------------------
+// Function to wear quip two by saying .quip 2
+function WearQuipTwo(){
+    if(Orion.GetGlobal("quip") != 2){
+    	Orion.Say(".quip 2"); 
+    	Orion.SetGlobal("quip", 2);
+    } 
+}
+
+// -------------------------------------------------------
+// Get all players target in your vision
+// -------------------------------------------------------
+function GetTargets(){
+	Orion.SetGlobal('posX', 1235);         // Put here the initial X position of first target 
+	Orion.SetGlobal('posY', 150);          // Put here the initial Y position of first target 
+	Orion.SetGlobal('column', 0);          // Variable to control columns. Dont touch!!
+	var distance = 500;                    // Put here the total distance in tiles to find targets 
+	var spaceBetweenTargets = 70;          // Put here the space between each target
+	var ignoreMyself = 1;                  // 1 = ignore yourself | 0 = count yourself
+	var onlyPlayers = false;               // true = only players targets | false = all live targets	
+	
+	 
+	if(!onlyPlayers){
+		var targets = '0xFFFF';
+	}else{
+		var targets = '0x0190';
+	}
+	
+	var players = Orion.FindType(targets, '0xFFFF', 'any','mobile', distance );
+    if(players && players.length > 0){
+    	for(var i = 0; i < players.length; i++){
+    		var posX = Orion.GetGlobal('posX'); 
+    		var posY = Orion.GetGlobal('posY'); 
+    		
+    		if(ignoreMyself == 1){
+    			if( Player.Serial() != players[i] ){
+    				Orion.ShowStatusbar(players[i], posX,posY);
+    				Orion.SetGlobal('posY', parseInt(posY) + spaceBetweenTargets);
+    				if(parseInt(Orion.GetGlobal('column')) >= 9){
+    					Orion.SetGlobal('posX', parseInt(posX) - 200);
+    					Orion.SetGlobal('column', 0);
+    					Orion.SetGlobal('posY', 150);
+    				} 
+    			}
+    		}else{
+    			Orion.ShowStatusbar(players[i], posX,posY); 
+    			Orion.SetGlobal('posY', parseInt(posY) + spaceBetweenTargets);
+				if(parseInt(Orion.GetGlobal('column')) >= 9){
+    				Orion.SetGlobal('posX', parseInt(posX) + - 200);
+    				Orion.SetGlobal('column', 0);
+    				Orion.SetGlobal('posY', 150);
+    			} 
+    		}
+    		Orion.SetGlobal('column', parseInt(Orion.GetGlobal('column')) + 1);
+    	}
+    }
 }
 
 // -----------------------------------------------
@@ -36,6 +108,7 @@ function BandageSelf(){
 // Adds a timer with duration of  each spell.
 
 function Buffs(){
+	WearQuipTwo();
 	// Cast Agility
 	Orion.Cast('Agility');
 	Orion.WaitForTarget(3000);
@@ -66,24 +139,15 @@ function Buffs(){
 }
 
 
-// --------------------------------------------------
-// Heal 
-// This function cast Heal spell on yoursel.
-//---------------------------------------------------
-function Heal(){
-  Orion.Cast("Heal"); 
-  Orion.WaitForTarget(3000);
-  Orion.TargetObject('self');
-  Orion.Wait(100);
-}
+
 
 // ------------------------------------------------------
 // GreaterHeal 
 // This function cast Greater Heal spell on yourself. 
 // -------------------------------------------------------
 function GreaterHeal(){
- Orion.Say(".quip 2");
- Orion.Wait("200");
+ WearQuipTwo();
+ Orion.Wait(200);
  Orion.Cast("Greater Heal"); 
  Orion.WaitForTarget(3000);
  Orion.TargetObject('self'); 
@@ -96,7 +160,7 @@ function GreaterHeal(){
 // This function cast cure spell on yourself
 // ------------------------------------------------
 function CureSelf(){
-  Orion.Say(".quip 2");
+  WearQuipTwo();
   Orion.Wait(200);	
   Orion.Cast("Cure"); 
   Orion.WaitForTarget(3000); 
@@ -110,16 +174,14 @@ function CureSelf(){
 // and add a timer of 15 seconds 
 // -----------------------------------------------------
 function DrinkCure(){
-	Orion.UseType('0x0F07', '0xFFFF'); 
-	Orion.AddDisplayTimer(6666,15000, 'RightTop', 'Bar', "Cure Pot", -30, 30, '0x2C', 1 , 'green' );
-	Orion.Wait(200); 
-	if(Player.Poisoned()){
-	  Orion.Say("MAMEI PO POISON");
-	}else{
-	  Orion.Say("CUREI NO POT");
-	}
-	if(Orion.DisplayTimerExists("bandage")) {
-	   Orion.RemoveDisplayTimer('bandage');
+	var pots = Orion.FindType("0x0F07", "0xFFFF", "backpack");
+	if(pots && pots.length > 0){
+		Orion.UseType('0x0F07', '0xFFFF'); 
+		Orion.AddDisplayTimer(6666,15000, 'LeftTop', 'Bar', "Cure Pot", 700, 150, '0x2C', 1 , 'green' );
+		Orion.Wait(200); 
+		if(Orion.DisplayTimerExists("bandage")) {
+	   		Orion.RemoveDisplayTimer('bandage');
+		}
 	}
 }
 
@@ -129,10 +191,13 @@ function DrinkCure(){
 // and add a timer of 15 seconds 
 // ----------------------------------------------------
 function DrinkHeal(){
-	Orion.UseType('0x0F0C', '0xFFFF'); 
-	Orion.AddDisplayTimer(1111,15000, 'RightTop', 'Bar', 'Heal Pot', -100, 30, '0x2C', 1, 'green');
-	if(Orion.DisplayTimerExists('bandage')){
-		Orion.RemoveDisplayTimer("bandage");
+	var pots = Orion.FindType("0x0F0C", "0xFFFF","backpack"); 
+	if(pots && pots.length > 0){
+		Orion.UseType('0x0F0C', '0xFFFF'); 
+		Orion.AddDisplayTimer(1111,15000, 'LeftTop', 'Bar', 'Heal Pot', 800, 150, '0x2C', 1, 'yellow');
+		if(Orion.DisplayTimerExists('bandage')){
+			Orion.RemoveDisplayTimer("bandage");
+		}
 	}
 }
 
@@ -141,6 +206,7 @@ function DrinkHeal(){
 // Poisoning 
 // This function applies a poison potion
 // into your weapon
+//-------------------------------------------------
 function Poisoning(){
 	Orion.UseSkill('30'); 
 	Orion.WaitForTarget(1000); 
@@ -153,6 +219,10 @@ function Poisoning(){
 }
 
 
+// ------------------------------------------------
+// Display Poison Status 
+// This function is under construction
+// -----------------------------------------------
 function displayPoisonStatus() {  
 	var gump = Orion.CreateCustomGump(12345); 
 	gump.Clear(); 

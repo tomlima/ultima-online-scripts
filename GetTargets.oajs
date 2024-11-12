@@ -1,0 +1,52 @@
+
+// Get targets Script
+// Version 1.0
+// Author: Tom Lima
+// This script is used to get all targets in your screen! :D 
+
+
+function GetTargets(){
+	Orion.SetGlobal('posX', 1235);         // Put here the initial X position of first target 
+	Orion.SetGlobal('posY', 150);          // Put here the initial Y position of first target 
+	Orion.SetGlobal('column', 0);          // Variable to control columns. Dont touch!!
+	var distance = 500;                    // Put here the total distance in tiles to find targets 
+	var spaceBetweenTargets = 70;          // Put here the space between each target
+	var ignoreMyself = 1;                  // 1 = ignore yourself | 0 = count yourself
+	var onlyPlayers = false;               // true = only players targets | false = all live targets	
+	
+	 
+	if(!onlyPlayers){
+		var targets = '0xFFFF';
+	}else{
+		var targets = '0x0190';
+	}
+	
+	var players = Orion.FindType(targets, '0xFFFF', 'any','mobile', distance );
+    if(players && players.length > 0){
+    	for(var i = 0; i < players.length; i++){
+    		var posX = Orion.GetGlobal('posX'); 
+    		var posY = Orion.GetGlobal('posY'); 
+    		
+    		if(ignoreMyself == 1){
+    			if( Player.Serial() != players[i] ){
+    				Orion.ShowStatusbar(players[i], posX,posY);
+    				Orion.SetGlobal('posY', parseInt(posY) + spaceBetweenTargets);
+    				if(parseInt(Orion.GetGlobal('column')) >= 9){
+    					Orion.SetGlobal('posX', parseInt(posX) - 200);
+    					Orion.SetGlobal('column', 0);
+    					Orion.SetGlobal('posY', 150);
+    				} 
+    			}
+    		}else{
+    			Orion.ShowStatusbar(players[i], posX,posY); 
+    			Orion.SetGlobal('posY', parseInt(posY) + spaceBetweenTargets);
+				if(parseInt(Orion.GetGlobal('column')) >= 9){
+    				Orion.SetGlobal('posX', parseInt(posX) + - 200);
+    				Orion.SetGlobal('column', 0);
+    				Orion.SetGlobal('posY', 150);
+    			} 
+    		}
+    		Orion.SetGlobal('column', parseInt(Orion.GetGlobal('column')) + 1);
+    	}
+    }
+}
