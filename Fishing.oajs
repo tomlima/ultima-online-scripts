@@ -9,7 +9,7 @@ function Main()
 	}
 }
 
-function Fish() 
+function Fish()
 {
     if (!Orion.ScriptRunning('WatchSerpent'))
             Orion.Exec('WatchSerpent');

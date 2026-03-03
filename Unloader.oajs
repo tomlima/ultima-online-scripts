@@ -1,0 +1,327 @@
+// ==========================================================================
+// Version 1.3
+// Author: Tom Lima
+// Move Selected Items - OrionUO
+// Item organizer with a graphical interface using the CustomGump API.
+// ==========================================================================
+
+// Configurações globais
+var GUMP_ID = 10002;
+var ITEMS_PER_PAGE = 10;
+
+
+var REGS_TYPES = [
+    0x0F7B,0x0F7A,0x0F84,0x0F85,
+    0x0F86,0x0F88,0x0F8C,0x0F8D
+];
+
+var GEMS_TYPES = [
+    0x0F13,0x0F30,0x0F25,0x0F16,
+    0x0F10,0x0F18,0x0F11,0x0F15,0x0F0F
+];
+
+var CHECK_REGS = 900001;
+var CHECK_GEMS = 900002;
+
+
+// ==========================================================================
+// Main function
+// ==========================================================================
+function main() {
+    Orion.Print("43","Unloader Initialized");
+    var items = getBackpackItems();
+    
+    if (!items || items.length === 0) {
+        Orion.Print("33", "No items found.");
+        return;
+    }
+    showItemSelectionGump(items);
+}
+
+// ==========================================================================
+// Search for all itens in your backpack
+// ==========================================================================
+function getBackpackItems() {
+    var items = Orion.FindTypeEx(
+        'any',
+        'any',
+        'backpack',
+        '',
+        'finddistance',
+        '',
+        true
+    );
+    
+    if (!items) return [];
+    
+    return items;
+}
+
+
+// ==========================================================================
+// Gump callback
+// ==========================================================================
+
+function GumpHandler()
+{
+    var returnCode = CustomGumpResponse.ReturnCode();
+    if (returnCode != 1)
+        return;
+
+    var selectedSerials = CustomGumpResponse.Checks();
+
+    var selectRegs = selectedSerials.indexOf(CHECK_REGS) >= 0;
+    var selectGems = selectedSerials.indexOf(CHECK_GEMS) >= 0;
+
+    var selectedItems = [];
+
+    // ======================
+    // REGs
+    // ======================
+    if (selectRegs) {
+        var regs = Orion.FindTypeEx(
+            '0x0F7B|0x0F7A|0x0F84|0x0F85|0x0F86|0x0F88|0x0F8C|0x0F8D',
+            'any',
+            'backpack',
+            '',
+            'finddistance',
+            '',
+            true
+        );
+
+        for (var i = 0; i < regs.length; i++)
+            selectedItems.push(regs[i]);
+    }
+
+    // ======================
+    // GEMAS
+    // ======================
+    if (selectGems) {
+        var gems = Orion.FindTypeEx(
+            '0x0F13|0x0F30|0x0F25|0x0F16|0x0F10|0x0F18|0x0F11|0x0F15',
+            'any',
+            'backpack',
+            '',
+            'finddistance',
+            '',
+            true
+        );
+
+        for (var i = 0; i < gems.length; i++)
+            selectedItems.push(gems[i]);
+    }
+
+    // ======================
+    // CHECKBOXES NORMAIS
+    // ======================
+    for (var i = 0; i < selectedSerials.length; i++) {
+
+        if (selectedSerials[i] == CHECK_REGS || selectedSerials[i] == CHECK_GEMS)
+            continue;
+
+        var obj = Orion.FindObject(selectedSerials[i]);
+        if (obj)
+            selectedItems.push(obj);
+    }
+
+    if (selectedItems.length === 0) {
+        Orion.Print(33, "Nenhum item selecionado.");
+        return;
+    }
+
+    moveItemsToContainer(selectedItems);
+}
+
+// ==========================================================================
+// Display item selecion gump
+// ==========================================================================
+function showItemSelectionGump(items) {
+    Orion.CloseGump(GUMP_ID);
+    
+    var gump = Orion.CreateCustomGump(GUMP_ID);
+    gump.Clear();
+    gump.SetNoMove(false);
+    gump.SetNoClose(false);
+    
+    var totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+    
+    if (totalPages < 1) totalPages = 1;
+    
+    for (var page = 0; page < totalPages; page++) {
+        gump.AddPage(page);
+        
+        // ======================
+        // Background and title
+        // ======================
+        gump.AddResizepic(0, 0, '5054', 520, 660);
+        gump.AddText(30, 20, '67', "Selecione os itens");
+        gump.AddText(30, 40, '67', "Página " + (page + 1) + " / " + totalPages);
+        
+        
+         // ======================
+        // Special checks
+        // ======================
+        gump.AddCheckbox(
+		    CHECK_REGS,
+		    30,
+		    70,
+		    '9720',
+		    '9721',
+		    '9721',
+		    0,
+		    '0'
+		);
+		
+		gump.AddText(80, 75, 1153, "Selecionar todas as regs");
+		
+		gump.AddCheckbox(
+		    CHECK_GEMS,
+		    30,
+		    100,
+		    '9720',
+		    '9721',
+		    '9721',
+		    0,
+		    '0'
+		);
+		
+		gump.AddText(80, 105, 1153, "Selecionar todas as gemas");
+		        
+        // ======================
+        // Itens listing
+        // ======================
+        var start = page * ITEMS_PER_PAGE;
+        var end = start + ITEMS_PER_PAGE;
+        var y = 160;
+        
+        for (var i = start; i < end && i < items.length; i++) {
+            var obj = Orion.FindObject(items[i].Serial());
+            if (!obj) continue;
+            
+            // Checkbox
+            gump.AddCheckbox(
+                obj.Serial(),
+                30,
+                y,
+                '0x00D2',
+                '0x00D3',
+                '0x00D3',
+                0,
+                '0'
+            );
+            
+            // Ícone do item
+            gump.AddTilePic(
+                60,
+                y - 5,
+                obj.Graphic().toString(),
+                obj.Color().toString()
+            );
+            
+            // Nome do item
+            var itemName = ( "[" + obj.Count() + "]");
+            gump.AddText(100, y + 5, '1153', itemName);
+            
+            y += 35;
+        }
+        
+        // ======================
+        // Previous button
+        // ======================
+        if (page > 0) {
+            gump.AddButton(
+                10000 + page,
+                100,
+                613,
+                '4014',
+                '4015',
+                '4016',
+                '0',
+                0,
+                page - 1
+            );
+            gump.AddText(150, 613, '0', "Anterior");
+        }
+        
+        // ======================
+        // Next button
+        // ======================
+        if (page < totalPages - 1) {
+            gump.AddButton(
+                20000 + page,
+                400,
+                613,
+                '4005',
+                '4006',
+                '4007',
+                '0',
+                0,
+                page + 1
+            );
+            gump.AddText(320, 613, '0', "Próxima");
+        }
+        
+        // ======================
+        // Ok button
+        // ======================
+     	gump.AddButton(
+		    1,
+		    240,
+		    613,
+		    '247',
+		    '248',
+		    '249',
+		    '0',   // cor
+		    1,   // action = 0 para botão OK / fechar gump
+		    0   // toPage = -1, porque não vai mudar de página
+		);
+    }
+    gump.SetCallback("GumpHandler");
+    gump.Update();
+}
+
+// ==========================================================================
+// OBTER ITENS SELECIONADOS DO GUMP
+// ==========================================================================
+function getSelectedItems(response) {
+    var selected = [];
+    var checks = response.Checks();
+    
+    for (var i = 0; i < checks.length; i++) {
+        var serial = checks[i];
+        var obj = Orion.FindObject(serial);
+        
+        if (obj) {
+            selected.push(obj);
+        }
+    }
+    
+    return selected;
+}
+
+// ==========================================================================
+// MOVER ITENS PARA O CONTAINER DESTINO
+// ==========================================================================
+function moveItemsToContainer(items) {
+  	Orion.Print("Selecione o container destino...");
+
+  	Orion.AddObject('UnloaderContainer');
+	Orion.WaitWhileTargeting();	
+
+    Orion.Print("Movendo " + items.length + " itens...");
+
+    for (var i = 0; i < items.length; i++) {
+        Orion.MoveItem(
+            items[i].Serial(),
+            items[i].Count(),
+            'UnloaderContainer'
+        );
+
+        Orion.Wait(600); // Anti-flood
+    }
+
+    Orion.Print("Itens movidos com sucesso!");
+}
+
+
+

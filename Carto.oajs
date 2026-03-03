@@ -1,0 +1,62 @@
+//============================================
+// Author: Tom Lima
+// Version 1.0
+// =====================
+// How to use:
+// Buy a bunch of maps and play the script.
+//============================================
+
+
+//=======================
+// CONFIG VARIABLES
+//======================
+
+var MAPS_GRAPH = "0x14EB";
+var DELAY = "15000";
+var SKILL = Orion.SkillValue("Cartography","base");
+var MAPS_TYPES = {
+	LOCAL: 'Local Map',
+    REGIONAL: 'Regional Map',
+    WORLD: 'World Map'
+}
+
+function main(){
+	Orion.Print(0x44,  'Cartography (base): ' + SKILL);
+	while(true){
+	    var skill = Orion.SkillValue("Cartography","base");
+	    var maps = Orion.FindType(MAPS_GRAPH, 'any','backpack');
+		if(maps != null && maps.length > 0){
+    		var base = maps[0];
+    		Orion.UseSkill('12');
+    		if (Orion.WaitForTarget(1000)) {
+    			Orion.TargetObject(base);
+    			if (Orion.WaitForMenu(1000))
+    			{
+    				var menu = Orion.GetMenu('last');
+    				if (menu !== null)
+    				{
+    					if (menu.Name() === "What you you want to create?")
+                            if(skill >= 330 && skill < 500){
+                            	Orion.Print(0x44,  'Making a local map');
+    						    menu.Select(MAPS_TYPES.LOCAL);
+                            }
+
+                            if(skill >= 500 && skill <= 700){
+                            	Orion.Print(0x44,  'Making a regional map');
+    						    menu.Select(MAPS_TYPES.REGIONAL);
+                            }
+
+                            if(skill > 700){
+                            	Orion.Print(0x44,  'Making a world map');
+                                menu.Select(MAPS_TYPES.WORLD)
+                            }
+    				}
+    			}
+    		}
+            Orion.Wait(DELAY);
+    	}else{
+    	    Orion.Print(0x44,  'You need more maps sweet heart :D');
+    		break;
+    	}
+    }
+}

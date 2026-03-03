@@ -1,14 +1,27 @@
-// PVP Script 
-// Version 1.1
+// =================================
+// The Bible
+// Version 1.3
 // Author: Tom Lima
-// This script is a set of usefull tools to do PVP. Enjoy! :D 
+// This script is a set of usefull tools. Enjoy it :D
+// 
+// -------------------------------------------------------------
+//     			   _____  _____
+//    			_/         Y          \_
+//   		   // ~~ ~   | ~~ ~  \\
+//           // ~ ~ ~~ | ~~~ ~ \\      
+//          //_______ .|._______\\     
+//	        `-----------`- '-----------'
+//
+//
+// ==================================
 
 
-// ----------------------------------------------------
-// Bandage Self 
-// ----------------------------------------------------
+
+
+//=============================
 // This function apply bands to yourself 
 // and add a timer to screen. 
+//==============================
 
 function BandageSelf(){
 	if (!Orion.DisplayTimerExists("bandage")){
@@ -30,10 +43,10 @@ function BandageSelf(){
 	}
 }
 
-// ----------------------------
-// WearQuipOne
-//----------------------------
+
+//==============================
 // Function to wear quip one by saying .quip 1
+//==============================
 function WearQuipOne(){
 	if(Orion.GetGlobal("quip") != 1){
 		Orion.Say(".quip 1");
@@ -41,10 +54,10 @@ function WearQuipOne(){
 	}
 }
 
-//-----------------------------
-// WearQuipTwo 
-//----------------------------
-// Function to wear quip two by saying .quip 2
+
+//==============================
+// Function to wear quip one by saying .quip 2
+//==============================
 function WearQuipTwo(){
     if(Orion.GetGlobal("quip") != 2){
     	Orion.Say(".quip 2"); 
@@ -52,17 +65,27 @@ function WearQuipTwo(){
     } 
 }
 
-// -------------------------------------------------------
-// Get all players target in your vision
-// -------------------------------------------------------
+//==============================
+// Function to wear quip one by saying .quip3
+//==============================
+function WearQuipTree(){
+	if(Orion.GetGlobal("quip") !== 3){
+		Orion.Say(".quip 3");
+		Orion.SetGlobal("quip", 3);
+	}
+}
+
+//================================
+// Get all target in your vision
+// ================================
 function GetTargets(){
-	Orion.SetGlobal('posX', 1235);         // Put here the initial X position of first target 
-	Orion.SetGlobal('posY', 150);          // Put here the initial Y position of first target 
-	Orion.SetGlobal('column', 0);          // Variable to control columns. Dont touch!!
-	var distance = 500;                    // Put here the total distance in tiles to find targets 
-	var spaceBetweenTargets = 70;          // Put here the space between each target
-	var ignoreMyself = 1;                  // 1 = ignore yourself | 0 = count yourself
-	var onlyPlayers = false;               // true = only players targets | false = all live targets	
+	Orion.SetGlobal('posX', 1235);   							// Put here the initial X position of first target 
+	Orion.SetGlobal('posY', 250);    							// Put here the initial Y position of first target 
+	Orion.SetGlobal('column', 0);   							// Variable to control columns. Dont touch!!
+	var distance = 200;                       					// Put here the total distance in tiles to find targets 
+	var spaceBetweenTargets = 70;    						// Put here the space between each target
+	var ignoreMyself = 1;                  						// 1 = ignore yourself | 0 = count yourself
+	var onlyPlayers = false;               						// true = only players targets | false = all live targets	
 	
 	 
 	if(!onlyPlayers){
@@ -101,11 +124,10 @@ function GetTargets(){
     }
 }
 
-// -----------------------------------------------
-// Buffs 
-// ------------------------------------------------
+// ============================
 // This Function cast a set of buff skills and 
 // Adds a timer with duration of  each spell.
+// ============================
 
 function Buffs(){
 	WearQuipTwo();
@@ -202,11 +224,11 @@ function DrinkHeal(){
 }
 
 
-// ------------------------------------------------
+// ============================
 // Poisoning 
 // This function applies a poison potion
 // into your weapon
-//-------------------------------------------------
+// ============================
 function Poisoning(){
 	Orion.UseSkill('30'); 
 	Orion.WaitForTarget(1000); 
@@ -219,21 +241,3 @@ function Poisoning(){
 }
 
 
-// ------------------------------------------------
-// Display Poison Status 
-// This function is under construction
-// -----------------------------------------------
-function displayPoisonStatus() {  
-	var gump = Orion.CreateCustomGump(12345); 
-	gump.Clear(); 
-	
-	while(!Player.Dead()){
-		if (Player.Poisoned()) { 
-			gump.AddText(10, 30,  '82', "Status: Poisoned"); // Red text for poisoned 
-		} else { 
-			gump.AddText(10, 30, '50', "Status: Not Poisoned"); // Green text for not poisoned
- 		} 
-		gump.Update(); // Update the gump to display the current information
-		Orion.Wait(1000);
-	}
-}

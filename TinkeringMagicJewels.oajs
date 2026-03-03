@@ -1,0 +1,179 @@
+var Ingot = '0x1BF2'
+var GoldColor = '0x07AD'
+var MagicColors = '0x0040|0x0070|0x0003|0x0021|0x07AD'
+var MsgColor = '0x0030'
+var TinkerTool = '0x1EBC'
+var Gems = ['0x0F10|0x0F0F|0x0F11|0x0F12|0x0F13|0x0F16|0x0F18|0x0F15|0x0F25|0x0F30'];
+var JewelType
+var Jewels = [['0x1086', 4230, 'Bracelet', 1],
+							['0x1087', 4231, 'Earring', 1],
+							['0x1088', 4232, 'Necklace', 1],
+							['0x108A', 4234, 'Ring', 1]]
+							
+var QtyToMake = 25
+
+
+function Tinkering()
+{
+	Orion.Print('Select the tinkering secure container!');
+	Orion.AddObject('TinkeringSecure');
+	Orion.WaitWhileTargeting();
+	Orion.OpenContainer('TinkeringSecure');
+	Orion.Wait(200);
+	Orion.MoveGump('container', 10, 10, 'TinkeringSecure');
+	Orion.Wait(700);
+	
+	Orion.Print('Select the magic jewels secure container!');
+	Orion.AddObject('MagicJewelsSecure');
+	Orion.WaitWhileTargeting();
+	Orion.OpenContainer('MagicJewelsSecure');
+	Orion.Wait(200);
+	Orion.MoveGump('container', 230, 10, 'MagicJewelsSecure');
+	Orion.Wait(700);
+	
+	JewelType = Jewels.map(function (element) {return element[0];}).join('|');
+	MoveMagicJewel()
+	SmeltNonMagicalJewel()
+
+	
+	while (true)
+	{
+		for (var i = 0; i < Jewels.length; i++)
+		{
+			if (Jewels[i][3] == 1)
+			{
+				if (Orion.Count(Gems, 'any', 'TinkeringSecure') == 0)
+				{
+					Orion.Print('0x0026', 'You are out of gems, script halted!');
+					Orion.Terminate('Tinkering')
+				}
+				
+				if (Orion.Count(Ingot, GoldColor, 'TinkeringSecure') < (QtyToMake * 2))
+				{
+					Orion.Print('0x0026', "You don't have enough gold ingots to tinker " + QtyToMake + " jewels, script halted!");
+					Orion.Terminate('Tinkering')
+				}
+				
+				TinkerJewel(Jewels[i][0], QtyToMake)
+				MoveMagicJewel()
+				SmeltNonMagicalJewel()
+			}
+		}
+	}
+}
+
+
+function TinkerJewel(type, qty)
+{
+	var gem = Orion.FindType(Gems, 'any', 'TinkeringSecure')
+	var ingots = Orion.FindType(Ingot, GoldColor, 'TinkeringSecure')
+	var idx = Jewels.map(function (element) {return element[0];}).indexOf(type)
+	var button = Jewels[idx][1]
+	
+	var cnt = Orion.FindObject(gem[0]).Count()
+	if (cnt < qty)
+		qty = cnt
+	
+	Orion.Print(MsgColor, 'Start tinkering ' + qty + ' ' + Jewels[idx][2] + 's');
+	
+	Orion.UseType(TinkerTool);
+	if (Orion.WaitForTarget(15000))
+		
+	Orion.TargetObject(ingots);
+	if (Orion.WaitForGump(15000))
+	{
+		var gump0 = Orion.GetGump('last');
+		if (gump0 !== null)
+		{
+			var gumpHook0 = Orion.CreateGumpHook(button);
+			gumpHook0.AddEntry(513, qty);
+			gump0.Select(gumpHook0);
+			Orion.Wait(100);
+		}
+	}
+	
+	if (Orion.WaitForTarget(15000))
+		Orion.TargetObject(gem[0]);
+		
+	while (Orion.Count(type, 'any', 'backpack') < qty)
+	{
+		Orion.Wait(6500);
+	}
+	
+	Orion.Print('Finished tinkering');
+	Orion.Wait(1000);
+}
+
+
+function MoveMagicJewel()
+{
+	if (JewelType == null)
+		JewelType = Jewels.map(function (element) {return element[0];}).join('|');
+		
+	while (Orion.Count(JewelType, MagicColors, 'backpack') > 0)
+	{
+		var items = Orion.FindType(JewelType, MagicColors, 'backpack')
+		for (var i = 0; i < items.length; i++)
+		{
+			Orion.MoveItem(items[i], 1, 'MagicJewelsSecure');
+		}
+		Orion.Wait(300);
+	}
+}
+
+
+function SmeltNonMagicalJewel()
+{
+	if (JewelType == null)
+		JewelType = Jewels.map(function (element) {return element[0];}).join('|');
+		
+	Orion.Print(MsgColor, 'Smelt non-magical jewels');
+	while (Orion.Count(JewelType, '0x0000', 'backpack') > 0)
+	{
+		Orion.UseType(JewelType, '0x0000');
+		Orion.Wait(100);
+	}
+	
+	var ingots = Orion.FindType(Ingot, GoldColor, 'backpack')
+	Orion.Print(MsgColor, 'Move gold ingots from backpack into tinkering secure');
+	Orion.MoveItem(ingots, 0, 'TinkeringSecure');
+}
+
+
+function CreateGoldIngots()
+{
+	var forge = Orion.FindType('0x0FB1', 'any', 'ground', '', 2)
+	var golds = Orion.FindType('0x0EED', '0x0000', 'backpack')
+	//for (var i = 0; i <= golds.length; i++)
+	while (Orion.Count('0x0EED', '0x0000', 'backpack') > 0)
+	{
+		Orion.UseType('0x0EED');
+		if (Orion.WaitForTarget(15000))
+			Orion.TargetObject(forge);
+		
+		Orion.Wait(1000);
+		
+		AddItemsToStack(Ingot, GoldColor, 'backpack')
+		
+		Orion.Wait(1000);
+	}
+}
+
+
+function AddItemsToStack(ItemType, Color, SrcContainer)
+{
+	var item = Orion.FindType(ItemType, Color, SrcContainer)
+	var pile = Orion.FindType(ItemType, Color, 'ground', '', 3)
+	var dest = Orion.FindObject(pile);
+	if (item.length)
+	{
+		if (dest != null)
+		{
+			Orion.MoveItem(item[0], 0, dest.Serial(), dest.X(), dest.Y(), dest.Z());
+		}
+		else
+		{
+			Orion.MoveItem(item[0], 0, 'ground', Player.X(), Player.Y(), Player.Z());
+		}
+	}
+}

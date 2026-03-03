@@ -1,0 +1,118 @@
+//===============================================================
+// Script Name: FishingEvent
+// Author: Machiavel
+// Version: 1.0
+// Client Tested with: 2.0.0
+// Orion version tested with: 3.0.20.0
+// Shard OSI / FS: FS Neverlands Phoenix
+// Purpose: 
+//===============================================================
+var DebugInd = 1
+var MaxWeight = 350;
+//-----------------------------------------------------------------
+var Backpack = '0x0E75'
+var Fishes = '0x09CC|0x09CD|0x09CE'
+var FishingPole = '0x0DBF'
+var MagicFish = '0x0DD6|0x0009|0x005B|0x03E9'
+var Map = '0x14ED'
+var SOS = '0x099F'
+
+var GoodItems = Fishes + '|' + MagicFish + '|' + Map + '|' + SOS
+var target = 1
+//-----------------------------------------------------------------
+//-----------------------------------------------------------------
+
+function Fishing()
+{
+	Orion.Print('Select the container to put your catch in!');
+	Orion.AddObject('FishingContainer');
+	Orion.WaitWhileTargeting();
+	
+	Orion.OpenContainer('FishingContainer');
+	Orion.Wait(700);
+	
+	while (!Player.Dead())
+	{
+		CheckWeight()
+		FishingLoop()
+	}
+}
+
+
+function FishingLoop()
+{
+	var offset = 6;
+	var list = Orion.GetTilesInRect('water', Player.X() - offset, Player.Y() - offset, Player.X() + offset, Player.Y() + offset);
+
+	for (var i = 0; i < list.length; i++)
+	{
+		var tile = list[i];
+		if (Orion.ValidateTargetTile('0x00A8|0x00A9|0x00AA|0x00AB', tile.X(), tile.Y()));
+		{
+			FishTile(tile.X(), tile.Y(), tile.Z())
+			CheckWeight()
+		}
+	}
+}
+
+
+function FishTile(x, y, z)
+{
+	if (DebugInd == 1) Orion.Print('Entering FishTile Function!');
+
+	Orion.ClearJournal();
+	var time = Orion.Now()
+	if (DebugInd == 1) Orion.Print('FishTile: ' + x + ', ' + y);
+	Orion.UseType(FishingPole);
+	if (Orion.WaitForTarget(10000))
+	{
+		if (target == 0)
+		{
+			target = 1
+		}
+		else
+		{
+			Orion.TargetTile('water', x, y, z);
+		}
+	}
+	Orion.Wait(500);
+	
+	while (true)
+	{
+		if (Orion.InJournal("There doesn't seem to be any|You must wait to use something again|That location is not in your line of sight|You can't fish there|That is too far away|I am already doing something else", 'my|sys', '0', '0xFFFF', time, Orion.Now()) != null)
+		{
+			break;
+		}
+		
+		Orion.Wait(3000);
+		
+		if (Orion.HaveTarget())
+		{
+			Orion.CancelTarget();
+			return;
+		}
+	}
+}
+
+
+function CheckWeight()
+{
+	if (DebugInd == 1) Orion.Print('Entering CheckWeight Function!');
+	if (Player.Weight() >= MaxWeight)
+	{
+		DropCatchInContainer()
+	}
+}
+
+
+function DropCatchInContainer()
+{
+	var item_to_store = Orion.FindType(GoodItems, 'any', 'backpack');
+	if (item_to_store.length != 0)
+	{
+		for (var ii = 0; ii < item_to_store.length; ii++)
+		{
+			Orion.MoveItem(item_to_store[ii], 0, 'FishingContainer');
+		}
+	}
+}

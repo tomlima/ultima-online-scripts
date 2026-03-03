@@ -1,0 +1,119 @@
+
+
+max_weight = 300 ; //change it, or don't :D
+
+//####################################################
+//	MAIN
+//####################################################
+
+function Autostart() {
+	Orion.UseObject('backpack');
+	Orion.Wait(5000);
+	Lumberjacking_main();
+
+function Lumberjacking_main()
+{
+while(true)
+	{
+	var saw = Orion.FindType('0x1035', any, backpack);
+
+	if(saw.length < 1)
+		{
+		Orion.Print("No saws - can't start");
+		break;
+		}
+	Lumber();
+	}
+}
+
+//####################################################
+//	WOOD-RELATED STUFF
+//####################################################
+
+function Lumber()
+{
+Orion.WalkTo(538,2224,0);
+Orion.Print("Lumber started");
+var tiles=Orion.GetTilesInRect('tree',Player.X()-15,Player.Y()-15,Player.Z(),Player.X()+15,Player.Y()+15,Player.Z());
+Orion.Print(tiles.length);
+
+for(var i=0;i<tiles.length;i++)
+	{
+		if(Player.Weight()<max_weight)
+			{
+			var Tile=tiles[i];
+			Orion.CancelTarget();
+			//Orion.Print("Found a good tree");
+			Orion.WalkTo(Tile.X(),Tile.Y(),Tile.Z());
+			Orion.UseType('0x0F43');
+			Orion.Wait(500);
+			if(Orion.WaitForTarget())
+				{
+					Orion.TargetTile('tree',Tile.X(),Tile.Y(),Tile.Z());
+				}
+			Orion.WaitJournal('here to chop',Orion.Now(),0);
+			}
+		else
+		{
+		boarding();
+		Orion.Print("Next")
+		if(Player.Weight() >= max_weight){
+		  Orion.Print("Bank")
+		  bank();
+		}
+		}
+	}
+}
+
+function boarding()
+{
+    Orion.Print("Boarding...")
+	var logs = Orion.FindType('0x1BDD','0x0000',backpack );
+	if(logs){
+		for(var i = 0; i < logs.length; i++){
+			Orion.CancelTarget();
+			Orion.UseType('0x1035');
+			Orion.Wait(500);
+			var gump0 = Orion.GetGump('last');
+			var gumpHook0 = Orion.CreateGumpHook(7127);
+			gump0.Select(gumpHook0);
+			Orion.Wait(1500);
+			Orion.TargetObject(logs[i]);
+			Orion.Wait(8000);
+		}
+	}
+}
+
+//####################################################
+//	PUTTING SHIT SOMEWHERE ELSE
+//####################################################
+
+function bank()
+{
+	Orion.WalkTo(607,2236,0);
+	banker = Orion.FindObject('0x0081B980');
+	Orion.WalkTo(banker.X(), banker.Y(), banker.Z());
+	Orion.UseObject('0x0081B980');	
+	Orion.Wait(1000);
+	var bank_gump = Orion.GetLastGump();
+	Orion.Print(bank_gump.ID() + bank_gump.Text(1));
+	bank_gump.Select(Orion.CreateGumpHook(1));
+	Orion.Wait(1000)
+
+
+	//move all planks
+	var planks = Orion.FindType('0x1BD7', any, backpack);
+	for(var x in planks){
+		Orion.MoveItem(planks[x], 0, Player.BankSerial());
+		Orion.Wait(1000);
+	}
+	
+	// Move all logs 
+	var logs = Orion.FindType('0X1BDD',any,backpack);
+	for(var y in logs){
+	   Orion.MoveItem(logs[y],0,Player.BankSerial());
+	   Orion.Wait(1000);
+	}
+}
+}
+

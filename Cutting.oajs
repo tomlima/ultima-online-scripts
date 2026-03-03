@@ -1,0 +1,76 @@
+// ==============================
+// Auto Cut Corpses - OrionUO
+// Procura corpos e corta automaticamente
+// ==============================
+
+// ---- CONFIGURAÇÕES ----
+var KNIFE_TYPE = 0x0F51;     // tipo da faca
+var CORPSE_GRAPHIC = 0x2006; // graphic padrão de corpo
+var SEARCH_RANGE = 2;        // distância para procurar corpos
+var LOOP_DELAY = 600;        // tempo entre buscas (ms)
+var ACTION_DELAY = 900;      // tempo após cortar (ms)
+
+// Lista de corpos já cortados (evita repetir)
+var cutList = {};
+
+function FindKnife()
+{
+    var knife = Orion.FindType(KNIFE_TYPE, -1, 'backpack');
+    if (!knife.length)
+    {
+        Orion.Print("❌ The knife was not found!!");
+        return null;
+    }
+    return knife[0];
+}
+
+function FindCorpses()
+{
+    // procura corpos no chão dentro do range
+    return Orion.FindType(CORPSE_GRAPHIC, -1, 'ground', '', SEARCH_RANGE);
+}
+
+function CutCorpse(corpse, knife)
+{
+    Orion.Print("✂️ Cutting the corpse...");
+
+    Orion.UseObject(knife);
+    Orion.WaitTargetObject(corpse);
+
+    Orion.Wait(ACTION_DELAY);
+}
+
+function AutoCutLoop()
+{
+    Orion.Print("🔎 Auto cutting started.");
+
+    while (true)
+    {
+        var knife = FindKnife();
+        if (!knife)
+        {
+            Orion.Wait(2000);
+            continue;
+        }
+
+        var corpses = FindCorpses();
+
+        for (var i = 0; i < corpses.length; i++)
+        {
+            var corpse = corpses[i];
+
+            // evita cortar o mesmo corpo várias vezes
+            if (cutList[corpse])
+                continue;
+
+            CutCorpse(corpse, knife);
+
+            cutList[corpse] = true;
+        }
+
+        Orion.Wait(LOOP_DELAY);
+    }
+}
+
+// ---- INICIAR ----
+AutoCutLoop();

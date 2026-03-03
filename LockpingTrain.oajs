@@ -1,0 +1,62 @@
+// Put your code here...
+var lockpick = '0x14FB'
+var debugMode = false
+
+var LOCKPICK_CHEST = 'TainLockpick/chest'
+
+function loop() {
+  lockChest()
+  var unlockedChest = false
+  while (!unlockedChest) {
+    unlockedChest = unlockChest()
+    Orion.Wait(1000)
+  }
+}
+
+function lockChest() {
+  Orion.Cast('19'); // magic lock
+  if (Orion.WaitForTarget(2000)) {
+    Orion.TargetObject(LOCKPICK_CHEST);
+    Orion.Wait(1000);
+  }
+}
+
+function unlockChest() {
+  Orion.UseType(lockpick);
+  if (Orion.WaitForTarget(1000)) {
+    var now = Orion.Now()
+    Orion.TargetObject(LOCKPICK_CHEST);
+    var failedToPick = Orion.WaitJournal('You fail to pick', now, now + 3000)
+    if (failedToPick) {
+      debug('Failed to lockpick')
+      return false
+    } else {
+      debug('Picked lock successfuly')
+      return true
+    }
+  }
+}
+
+function isChestStillLocked(initialTime, waitTime) {
+  var failedToPick = Orion.WaitJournal('You fail to pick', initialTime, initialTime + waitTime)
+  if (failedToPick) {
+    return true
+  } else {
+    return false
+  }
+}
+
+function TrainLockpick() {
+  Orion.AddObject(LOCKPICK_CHEST)
+  if(Orion.WaitForAddObject(LOCKPICK_CHEST) != 0){
+    while (!Player.Dead()) {
+      loop()
+    }
+  }
+}
+
+function debug(msg) {
+	if (debugMode) {
+		Orion.Print(msg)
+	}
+}

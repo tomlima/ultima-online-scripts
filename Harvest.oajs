@@ -1,0 +1,48 @@
+// OrionUO script to harvest Nightshade
+
+// Set the item ID for Nightshade
+var nightshadeID = 0x18E5; // Update this ID if necessary
+
+// Define the amount of time to wait between actions (in milliseconds)
+var delay = 25000;
+var init = true;
+
+var maxWeight = Player.MaxWeight() * 0.8;
+
+// Function to harvest Nightshade
+function harvestNightshade() {
+    Orion.UseFromGround(nightshadeID, 0xFFFF,1);
+}
+
+function walkToNext(){
+	Orion.Print('Move to next');
+	var x = Player.X();
+	var y = Player.Y();
+	Orion.WalkTo(x,y+1,0,0);
+}
+
+function checkWeigth(){
+  if(Player.Weight() > maxWeight){
+  	  Orion.Print('You are heavy boi!');
+      useRaw();
+  }
+}
+
+function useRaw() {
+   var rawNs = Orion.FindType(0x18E7);
+   Orion.Print(rawNs.length);
+   for( var i = 0; i < rawNs.length; i++ ) {
+       Orion.UseType(0x18E7);
+       Orion.Wait(500)
+   }
+}
+
+// Main loop
+while (init) {
+    checkWeigth();
+    Orion.Wait(1000);
+    harvestNightshade();
+  	Orion.Wait(delay);
+  	walkToNext()
+    Orion.Wait(1000);
+}

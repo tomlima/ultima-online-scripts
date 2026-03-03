@@ -1,0 +1,101 @@
+var homerune='0x7AD77C6D'
+var tinkerrune='0x7AFB23AC'
+var tinkertools='0x1EBC'
+var ingots='0x1BF2'
+var tinkervendor='0x006AE815'
+var trashcan='0x0E77'
+function Main()
+{
+	while(Orion.SkillValue('tinkering')<1000)
+	{
+	 	Orion.Print('Player Skill '+Orion.SkillValue('tinkering'));
+	 	if(Orion.SkillValue('tinkering')<450)
+	 	{
+	 		Tinker(5091,100);
+	 		GoSell('0x13E3');
+	 	}
+	 	if(Orion.SkillValue('tinkering')<550&&Orion.SkillValue('tinkering')>=450)
+	 	{
+	 		Tinker(4100,100);
+	 		GoTrash('0x1004');
+	 	}
+	 	if(Orion.SkillValue('tinkering')<600&&Orion.SkillValue('tinkering')>=550)
+	 	{
+	 		Tinker(2599,100);
+	 		GoSell('0x0A27');
+	 	}
+	 	if(Orion.SkillValue('tinkering')<730&&Orion.SkillValue('tinkering')>=600)
+	 	{
+	 		Orion.Print("Make some boxes");
+	 		Tinker(3712,100);
+	 		GoTrash('0x0E80');
+	 	}
+	 	if(Orion.SkillValue('tinkering')<800&&Orion.SkillValue('tinkering')>=730)
+	 	{
+	 		Tinker(7868,100);
+	 		GoSell('0x1EBC');
+	 	}
+	}
+}
+
+function GoTrash(graph)
+{
+	var TrashCan=Orion.FindType(trashcan,'any','ground','',2);
+	var Boxes=Orion.FindType('0x0E80','any','backpack');
+	var Keys = Orion.FindType('0x100E','any','backpack');
+	
+	for(var x=0;Keys.length;x++){
+       Orion.MoveItem(Keys[x],0,TrashCan[0]);
+       Orion.Wait(100);	
+	}
+	
+	Orion.Wait(5000)
+	
+	for(var i=0;i<Boxes.length;i++)
+	{
+		Orion.MoveItem(Boxes[i],0,TrashCan[0]);
+		Orion.Wait(100);
+	}
+
+}
+
+function GoSell(graph)
+{
+	Orion.Cast('recall',tinkerrune);
+	Orion.Wait(4500);
+	Orion.UseObject(tinkervendor);
+	if (Orion.WaitForGump(1000))
+	{
+		var gump0 = Orion.GetGump('last');
+		if (gump0 !== null)
+		{
+			gump0.Select(Orion.CreateGumpHook(4));
+			Orion.Wait(100);
+		}
+	}
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetType(graph,'0x0000','backpack');
+	Orion.Cast('recall',homerune);
+	Orion.Wait(4500);
+}
+
+function Tinker(button,amount)
+{
+	var Ingots=Orion.FindType(ingots,'any','ground','',2);
+	Orion.Print(amount);
+	Orion.UseType(tinkertools);
+	if (Orion.WaitForTarget(1000))
+		Orion.TargetObject(Ingots[0]);
+	if (Orion.WaitForGump(1000))
+	{
+		var gump0 = Orion.GetGump('last');
+		if (gump0 !== null)
+		{
+			var gumpHook0 = Orion.CreateGumpHook(button);
+			gumpHook0.AddEntry(2, amount);
+			gump0.Select(gumpHook0);
+			Orion.Wait(100);
+		}
+	}
+	Orion.Wait(6500*amount);
+}

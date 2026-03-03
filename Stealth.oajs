@@ -1,12 +1,17 @@
-function Main() {
-    while (1 < 2){
-        Orion.UseSkill('Hiding')
-        Orion.Wait(11000)
-        while (Player.Hidden()){
+function Main()
+{
+while (1 < 2)
+    {
+    Orion.UseSkill('Hiding')
+    Orion.Wait(11000)
+    while (Player.Hidden())
+        {
             Orion.ClearJournal();
             Orion.UseSkill('Stealth')
             Orion.Wait(1000)
         }
-        Orion.Wait(12000)    
+    Orion.Print('Frans has a tiny pp')
+    Orion.Wait(12000)
+    
     }
 }

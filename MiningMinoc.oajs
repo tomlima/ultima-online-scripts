@@ -1,3 +1,14 @@
+//===============================================================
+// Script Name: Minoc Mining
+// Author: Machiavel
+// Version: 1.0
+// Client Tested with: 2.0.0
+// Orion version tested with: 3.0.0.0
+// Shard OSI / FS: FS Neverlands Phoenix
+// Purpose: Start the Mining() function when in the mine.  When you will reach the "MaxWeight"
+//          that you defined, the script will run to the forge near the banker to smelt ingots.  It will
+//          finally bank the ingots and run back to the mine.
+//===============================================================
 var DebugInd = 0
 var LastPosX
 var LastPosY
@@ -7,8 +18,8 @@ var MsgColor = '0x0030' // '0x00E9' //'0x001C'
 //===============================================================
 // You can change to following values
 //===============================================================
-var MaxWeight = 350  //It will smelt and bank ingots when your weight will reach this value
-var SmeltOreInd = 0 // 1 or 0. If = 0, it will bank ores without smelting them
+var MaxWeight = 180  //It will smelt and bank ingots when your weight will reach this value
+var SmeltOreInd = 1 // 1 or 0. If = 0, it will bank ores without smelting them
 var AutoStoreValuableOre = 1 //
 //===============================================================
 

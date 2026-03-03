@@ -1,0 +1,141 @@
+function AutoPvm(){
+
+	var distance = 150;
+	var attackRange = 1;
+	var lootDelay = 2500;
+
+	var patrol = [
+		[2164,1355,0],
+		[2170,1331,0],
+		[2188,1383,0]
+	];
+
+	var patrolIndex = 0;
+
+	while(true){
+
+		var mobiles = Orion.FindType('0xFFFF', '0xFFFF', 'any', 'mobile', distance);
+		var target = null;
+
+		// =========================
+		// PROCURA TARGET
+		// =========================
+		if(mobiles){
+			for(var i = 0; i < mobiles.length; i++){
+
+				var serial = mobiles[i];
+
+				if(Player.Serial() == serial)
+					continue;
+
+				var graphic = Orion.GetGraphic(serial);
+				if(graphic == '0x0190' || graphic == '0x0191')
+					continue;
+
+				target = serial;
+				break;
+			}
+		}
+
+		// =========================
+		// COMBATE
+		// =========================
+		if(target){
+
+			var failCount = 0;
+			var lastDistance = Orion.GetDistance(target);
+			var unreachable = false;
+
+			while(true){
+
+				var obj = Orion.FindObject(target);
+				if(!obj)
+					break;
+
+				var dist = Orion.GetDistance(target);
+				if(dist > distance)
+					break;
+
+				if(dist > attackRange){
+
+					Orion.WalkTo(obj.X(), obj.Y(), obj.Z(), 1, 255, false);
+					Orion.Wait(600);
+
+					var newDistance = Orion.GetDistance(target);
+
+					if(newDistance >= lastDistance)
+						failCount++;
+					else
+						failCount = 0;
+
+					lastDistance = newDistance;
+
+					if(failCount >= 4){
+						unreachable = true;
+						break;
+					}
+				}
+				else{
+					Orion.Attack(target);
+					Orion.Wait(300);
+				}
+			}
+
+			if(unreachable){
+				patrolIndex = (patrolIndex + 1) % patrol.length;
+				Orion.WalkTo(
+					patrol[patrolIndex][0],
+					patrol[patrolIndex][1],
+					patrol[patrolIndex][2],
+					1,255,false
+				);
+				Orion.Wait(1000);
+			}
+			else{
+				Orion.Wait(lootDelay);
+			}
+
+			continue; // 🔥 volta imediatamente pro while principal
+		}
+
+		// =========================
+		// RONDA INTELIGENTE REAL
+		// =========================
+
+		// 🔥 Antes de andar já verifica target
+		var checkBefore = Orion.FindType('0xFFFF','0xFFFF','any','mobile',distance);
+		if(checkBefore && checkBefore.length > 1)
+			continue;
+
+		// Anda para próximo ponto
+		patrolIndex = (patrolIndex + 1) % patrol.length;
+
+		Orion.WalkTo(
+			patrol[patrolIndex][0],
+			patrol[patrolIndex][1],
+			patrol[patrolIndex][2],
+			1,255,false
+		);
+
+		// Espera até 2 segundos, mas sai imediatamente se aparecer target
+		for(var t = 0; t < 10; t++){
+
+			Orion.Wait(200);
+
+			var check = Orion.FindType('0xFFFF','0xFFFF','any','mobile',distance);
+
+			if(check){
+				for(var j = 0; j < check.length; j++){
+
+					if(Player.Serial() == check[j])
+						continue;
+
+					var g = Orion.GetGraphic(check[j]);
+					if(g != '0x0190' && g != '0x0191'){
+						continue; // 🔥 volta para o while principal imediatamente
+					}
+				}
+			}
+		}
+	}
+}

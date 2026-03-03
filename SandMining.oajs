@@ -1,0 +1,381 @@
+//<0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0>
+// Author : Frozzy
+// Script : Recall Sand-mining
+//
+//Description : Auto-sand-mining script
+//
+//<0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0>
+// | | |
+// | | |      __ _ _ __ ___   __ _
+// | | |      / _` | '_ ` _ \ / _` |
+// | | |   /   (_| |  | | | | | (_| |
+// |_|_| \__,_|_| |_| |_|\__,_|
+//<0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0><0>
+version = "1.0"
+
+
+//####################################################
+//	GUIDE
+//####################################################
+// Start the gump with the "Start" funtion...the gump will let you do the rest
+// Press the "Set up" first to set your home-rune and rune to a beach (or Jhelom-area)
+// Press "Start Gathering" (can be started at home or at the beach.
+// Be sure to set the "max_weight in parameters-section (default is 250)
+
+
+
+//####################################################
+//	Parameters
+//####################################################
+
+var location = 0; 
+
+var max_weight = 350;
+var range = 8;
+var tiles = [
+    0x0D2E, 0x0D28, 0x0D25, 0x0D35, 0x0D32,
+    0x0D2C, 0x0D36, 0x0D29, 0x0D2D, 0x0D2F,
+    0x0CC6, 0x0CC4, 0x0FCB, 0x0EEA, 0x0FCC,
+    0x0FC8, 0x0EED, 0x0FC9, 0x0FC6
+];
+
+var sandSpots = [
+    { x: 1489, y: 1873, z: 0 }, // original
+    { x: 1491, y: 1869, z: 0 },
+    { x: 1488, y: 1873, z: 0 },
+    { x: 1489, y: 1874, z: 0 },
+    { x: 1489, y: 1872, z: 0 },
+    { x: 1490, y: 1874, z: 0 },
+    { x: 1488, y: 1872, z: 0 },
+    { x: 1491, y: 1873, z: 0 },
+    { x: 1489, y: 1875, z: 0 },
+    { x: 1487, y: 1873, z: 0 }
+];
+
+
+//####################################################
+//	SCRIPT START
+//####################################################
+function Start()
+{
+Orion.Exec('SandMining_Gump');
+}
+
+//####################################################
+//	MINING LOOP
+//####################################################
+
+function Sand_mining()
+{
+while(true)
+	{
+	//Reg Check
+	if(count_regs())
+	{
+	Orion.ActivateClient();
+	Orion.Print("120", "Not enough reagents to proceed (min 5) - stopping script");
+	Orion.SetGlobal('gump_message', 'Error');
+	Orion.Terminate('gump_response');
+	}
+
+	//location check - home or beach
+	var sand_tiles = Orion.GetTilesInRect(
+    "land",
+    Player.X()-range,
+    Player.Y()-range,
+    Player.Z()-2,
+    Player.X()+range,
+    Player.Y()+range,
+    Player.Z()+3
+);
+
+	if(location == 0)
+		
+		recall('sand');
+		
+	// start sandmining on the beach
+		var sand_tiles = Orion.GetTilesInRect(
+	    "land",
+	    Player.X()-range,
+	    Player.Y()-range,
+	    Player.Z()-2,
+	    Player.X()+range,
+	    Player.Y()+range,
+	    Player.Z()+3
+);
+	for(var x in sand_tiles)
+		{
+		mine_sand(sand_tiles[x]);
+		}
+	}
+}
+
+
+//####################################################
+//	SETUP
+//####################################################
+
+function Setup()
+{
+//Orion.Terminate('SandMining_Gump');
+Orion.SetGlobal('gump_message', 'Setup');
+Orion.Exec('Script_Gump');
+Orion.ActivateClient();
+
+Orion.Print("73","Select home rune");
+Orion.AddObject('home_rune');
+Orion.WaitWhileTargeting();
+
+Orion.Print("90", "Select  rune to the beach");
+Orion.AddObject('sand_rune');
+Orion.WaitWhileTargeting();
+
+}
+
+//####################################################
+//	SANDMINING
+//####################################################
+
+function mine_sand(tile)
+{
+Orion.WalkTo(tile.X(), tile.Y());
+Orion.SetGlobal('gump_message', 'Mining');
+while(true)
+	{
+	if(Player.Weight() > max_weight)
+		{
+		Orion.Print("Dropping off");
+		recall('home');
+		
+		Orion.Wait(3000);
+		Drop_Sand();
+		Sand_mining();
+		}
+	if(Orion.HaveTarget())
+		Orion.CancelWaitTarget();
+
+	Orion.UseType('0x0F39');
+	Orion.Wait(1000);
+	Orion.WaitJournal('Select something', Orion.Now(), Orion.Now()+2000, 'me|sys');
+	Orion.TargetTile(tile);
+	   var message = Orion.WaitJournal('stop digging|too far', Orion.Now(), (Orion.Now() + 7000), 'me|sys');
+	if(message && message.FindTextID()==0)
+		{
+		Orion.Print("Can't dig there");
+		Orion.Wait(300);
+		break;
+		}
+	if(message && message.FindTextID()==1)
+		{
+		Orion.Print("Too far away");
+		Orion.Wait(300);
+		break;
+		}
+	}
+}
+
+//####################################################
+//	SUPPORTING FUNCTIONS
+//####################################################
+
+function recall(destination)
+{
+Orion.SetGlobal('gump_message', 'Recalling');
+if(destination == "home")
+	{
+	location = 0;
+	var rune = Orion.FindObject('home_rune');
+	}
+else
+	{
+	location = 1;
+	var rune = Orion.FindObject('sand_rune');
+	}
+serial = rune.Serial();
+Orion.ClearJournal
+Orion.Cast("Recall", serial);
+if (Orion.WaitJournal('spell fizzles|Select a target|already doing something else|concentration is disturbed', Orion.Now(), Orion.Now()+6000))
+	{
+	Orion.Wait(3000);
+	recall(destination);
+	}
+Orion.SetGlobal('gump_message', 'Idle');
+}
+
+function count_regs()
+{
+var mr = Orion.Count('0x0F86', any, backpack);
+var bm = Orion.Count('0x0F7B', any, backpack);
+var bp  = Orion.Count('0x0F7A', any, backpack);
+
+if(mr < 5 || bm <5 || bp <5)
+	{
+	return true
+	}
+else
+	{
+	return false
+	}
+}
+
+function Drop_Sand()
+{
+	Orion.SetGlobal('gump_message', 'Drop Off');
+	var sand = Orion.FindType('0x0EED', "0x083B", backpack);
+	var floor_sand = Orion.FindType('0x0EED', "0x083B", ground, "near");
+	floor_stack = Orion.FindObject(floor_sand[0]);
+
+	if(floor_stack)
+	{
+		for(var i in sand)
+		{
+		Orion.DragItem(sand[i], 0);
+		Orion.Wait(100);
+		Orion.DropDraggedItem(floor_stack.Serial(), floor_stack.X(), floor_stack.Y(), floor_stack.Z());
+		}
+	}
+	else
+		Orion.Drop(sand[0]);
+
+	Orion.Wait(1000);
+
+	if(Orion.Count('0x0EED', '0x083B' , backpack) > 0)
+	Orion.Drop(sand[0]);
+	Orion.Wait(1000);
+	Orion.SetGlobal('gump_message', 'Idle');
+}
+
+//####################################################
+//	GUMP
+//####################################################
+
+function SandMining_Gump() {
+	var width = 406
+	var height = 229;
+	gump = Orion.CreateCustomGump(1000);
+	gump.Clear();
+
+	// background & size
+	//gump.AddResizepic(0, 0, 0xBB8, width, height);
+	gump.AddResizepic(0, 0, 11009, width, height);
+	var x = 10;
+	var y = 10;
+
+	 gump.AddText(60, 10, "40", "Sand Mining: " + version );
+	 gump.AddText(250, 10, "40", "Info:"  );
+	 gump.AddText(65, 20, "40", "---------------" );
+
+	 //First button
+	 gump.AddButton(1, 60, 43, '2103', '2104', '2473', '0');
+	 gump.AddText(75, 38, "70",'Set up');
+	 //Second button
+	 gump.AddButton(2, 60, 65, '2103', '2104', '2473', '0');
+	 gump.AddText(75, 60, "50",'Start Gathering');
+
+     //Drop sand button
+     gump.AddButton(3, 60, 87, '2103', '2104', '2104', '0');
+	 gump.AddText(75, 83, "50",'Drop Sand');
+
+      //recall home button
+     gump.AddButton(4, 60, 107, '2103', '2104', '2104', '0');
+	 gump.AddText(75, 102, "50",'Recall Home');
+
+     //recall home button
+     gump.AddButton(5, 60, 127, '2103', '2104', '2104', '0');
+	 gump.AddText(75, 122, "50",'Recall Sand');
+
+     //Stop script button
+     gump.AddButton(6, 60, 160, '2103', '2104', '2104', '0');
+	 gump.AddText(75, 155, "20",'Stop Script');
+
+	 //free stuff buttons
+	 gump.AddButton(100, 305, 110, '2103', '2104', '2104', '0');
+	 gump.AddButton(99, 325, 110, '2103', '2104', '2104', '0');
+
+	 //mandrake
+	 gump.AddTilePic(205, 110, '0x0F86', '0x0000');
+	 gump.AddText(245, 105, "20",Orion.Count('0x0F86', any, backpack));
+	 //black pearl
+	 gump.AddTilePic(205, 130, '0x0F7A', '0x0000');
+	 gump.AddText(245, 125, "20",Orion.Count('0x0F7A', any, backpack));
+	 //Blood Moss
+	 gump.AddTilePic(205, 150, '0x0F7B', '0x0000');
+	 gump.AddText(245, 145, "20",Orion.Count('0x0F7B', any, backpack));
+     //sand pic
+	gump.AddTilePic(205, 165, '0x0EEF', '0x083C');
+	gump.AddText(250, 170, "0",Orion.Count('0x0EED', '0x083B', backpack));
+
+    //skill-value
+     gump.AddText(220, 43, "0",'Mining: ' + Orion.SkillValue('Mining', 'base') /10 + "/125" );
+     gump.AddText(220, 63, "0",'Weight: ' + Player.Weight() + "/"+max_weight);
+
+     //Script status update
+      gump.AddText(60, 175, "0",'Status: ');
+     gump.AddText(120, 175, '92', Orion.GetGlobal('gump_message'));
+
+     //Signature
+     gump.AddGumpPic(300,135, 92);
+     gump.AddText(300, 175, Orion.Random(80, 100), "Frozzy"  );
+
+     //Gump callback management
+	gump.SetCallback("gump_response");
+	gump.Update();
+	Orion.Wait(500);
+	SandMining_Gump();
+}
+
+
+//####################################################
+//	GUMP CONTROL
+//####################################################
+
+function gump_response()
+{
+	var code = CustomGumpResponse.ReturnCode();
+	if (code == 0)
+	{
+		Orion.Print("Gump closed");
+		Orion.Terminate('SandMining_Gump');
+	}
+	else if(code == 1)
+	{
+	Setup();
+	}
+	else if(code == 2)
+	{
+	Sand_mining();
+	}
+	else if(code == 3)
+	{
+	Drop_Sand();
+	}
+	else if(code == 4)
+	{
+	recall('home');
+	}
+	else if(code == 5)
+	{
+	recall('sand');
+	}
+	else if(code == 6)
+	{
+	Orion.ClearJournal();
+	Orion.Print('36', "Stopping Script");
+	Orion.Terminate('gump_response');
+	}
+	else if(code == 99)
+	{
+	Orion.Morph(0);
+	}
+	else if(code == 100)
+	{
+	Orion.Morph(220);
+	var entities = Orion.FindType(any, any, ground, 'mobile|ignoreself', 15);
+	Orion.CharPrint(self, Orion.Random(1,150), "Makes indistinct llama noises")
+	for(var x in entities)
+		{
+		Orion.CharPrint(entities[x], Orion.Random(1,150), "Look at that cool Llama!")
+		Orion.Wait(Orion.Random(100, 500));
+		}
+	}
+}

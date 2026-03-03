@@ -1,0 +1,125 @@
+// ==========================================================================
+// Version 1.3
+// Author: Tom Lima
+// Chest Gold + Gems Loot
+// ==========================================================================
+
+
+// ===============================
+// TYPES
+// ===============================
+
+// Gold
+var GOLD_TYPE = '0x0EED';
+
+// Gemas
+var GEMS_TYPES = 
+    '0x0F13|' + // Ruby
+    '0x0F30|' + // Diamond
+    '0x0F25|' + // Amber
+    '0x0F16|' + // Amethyst
+    '0x0F10|' + // Sapphire
+    '0x0F18|' + // Tourmaline
+    '0x0F11|' + // Emerald
+    '0x0F15';   // Citrine
+
+
+// ==========================================================================
+// MAIN
+// ==========================================================================
+function main()
+{
+    Orion.Print("43", "Selecione o baú...");
+
+    Orion.AddObject('TargetChest');
+    Orion.WaitWhileTargeting();
+
+    var chest = Orion.FindObject('TargetChest');
+
+    if (!chest)
+    {
+        Orion.Print("33", "Nenhum baú selecionado.");
+        return;
+    }
+
+    // Abrir o baú
+    Orion.UseObject(chest.Serial());
+    Orion.Wait(1000);
+
+    lootGold(chest);
+    lootGems(chest);
+
+    Orion.Print("63", "Loot finalizado!");
+}
+
+
+// ==========================================================================
+// LOOT GOLD
+// ==========================================================================
+function lootGold(container)
+{
+    var goldItems = Orion.FindTypeEx(
+        GOLD_TYPE,
+        'any',
+        container.Serial(),
+        '',
+        'finddistance',
+        '',
+        true
+    );
+
+    if (!goldItems || goldItems.length === 0)
+    {
+        Orion.Print("33", "Nenhum gold encontrado.");
+        return;
+    }
+
+    Orion.Print("53", "Pegando gold...");
+
+    for (var i = 0; i < goldItems.length; i++)
+    {
+        Orion.MoveItem(
+            goldItems[i].Serial(),
+            goldItems[i].Count(),
+            'backpack'
+        );
+
+        Orion.Wait(600);
+    }
+}
+
+
+// ==========================================================================
+// LOOT GEMAS
+// ==========================================================================
+function lootGems(container)
+{
+    var gems = Orion.FindTypeEx(
+        GEMS_TYPES,
+        'any',
+        container.Serial(),
+        '',
+        'finddistance',
+        '',
+        true
+    );
+
+    if (!gems || gems.length === 0)
+    {
+        Orion.Print("33", "Nenhuma gema encontrada.");
+        return;
+    }
+
+    Orion.Print("53", "Pegando gemas...");
+
+    for (var i = 0; i < gems.length; i++)
+    {
+        Orion.MoveItem(
+            gems[i].Serial(),
+            gems[i].Count(),
+            'backpack'
+        );
+
+        Orion.Wait(600);
+    }
+}

@@ -1,0 +1,23 @@
+//===============================================================
+// Script Name: Training Dummies
+// Author: Machiavel
+// Version: 1.0
+// Client Tested with: 2.0.0
+// Orion version tested with: 3.0.0.0
+// Shard OSI / FS: FS Neverlands Phoenix
+// Purpose: Raising STR by hitting training dummies
+//===============================================================
+function TrainingDummies()
+{
+	var dummy = ['0x1070|0x1074']
+	var dummies = Orion.FindType(dummy, -1, 'ground', -1, 2);
+	
+	while (true)
+	{
+		for (var i = 0; i < dummies.length; i++)
+		{
+			Orion.UseObject(dummies[i]);
+			Orion.Wait(600);
+		}
+	}
+}

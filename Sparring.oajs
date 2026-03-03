@@ -1,0 +1,147 @@
+//===============================================================
+// Script Name: Sparring
+// Author: Machiavel
+// Version: 1.0
+// Client Tested with: 2.0.0
+// Orion version tested with: 3.0.0.0
+// Shard OSI / FS: FS Neverlands Phoenix
+// Purpose: Start the Sparring() functionand target you sparring partner.
+//         IMPORTANT: Be sure you set the "AttackerInd" parameter to 1 if you are the attacker and 0 if not.
+//===============================================================
+var Bandage = '0x0E21'
+var DebugInd = 0
+var AdditionalDelay = 0
+var MaxHitsPrc = 50
+var MaxPartnerHitsPrc = 50
+//===============================================================
+// You can change to following values
+//===============================================================
+var TrainAnatomyInd = 1
+var AttackerInd = 1
+//===============================================================
+
+function Sparring()
+{
+
+	Orion.Print('Target your sparring partner!');
+	Orion.AddObject('SparringPartner');
+	Orion.WaitWhileTargeting();
+	
+	while (!Player.Dead())
+	{
+		Anatomy()
+		CheckHealth()
+		HealPartner()
+		Attack()
+		Orion.Wait(500);
+	}
+}
+
+
+function Anatomy()
+{
+	if (DebugInd == 1) Orion.Print('Entering Anatomy Function!'); 
+	if (TrainAnatomyInd == 0)
+		return
+	
+	if (Orion.TimerExists('Anatomy') && Orion.Timer('Anatomy') < 10000)
+	{
+		return
+	}
+	
+	Orion.UseSkill('Anatomy', 'SparringPartner');
+	Orion.SetTimer('Anatomy');
+}
+
+
+function Attack()
+{
+	if (AttackerInd == 1)
+	{
+		var partner = Orion.FindObject('SparringPartner');
+		if (partner.Hits('%') >= MaxPartnerHitsPrc)
+		{
+			if (!Player.WarMode()) Orion.WarMode(1);
+			Orion.Attack('SparringPartner');
+		}
+	}
+}
+
+
+function CheckHealth()
+{
+	if (DebugInd == 1) Orion.Print('Entering CheckHealth Function!'); 
+	if (Player.Hits('%') < MaxHitsPrc)
+	{
+		Orion.Print('Attacker lower than '  + MaxHitsPrc + '% !');
+		if (AttackerInd == 1)
+		{
+			Orion.WarMode(0);
+			
+			WaitForHealth();
+			Attack();
+		}
+		else
+		{
+			WaitForHealth();
+		}
+	}
+}
+
+
+function HealPartner()
+{
+	if (DebugInd == 1) Orion.Print('Entering HealPartner Function!'); 
+	if (Orion.TimerExists('Healing') && Orion.Timer('Healing') < 4000)
+	{
+		return
+	}
+	
+	if (Orion.Count(Bandage, -1, 'backpack') == 0)
+	{
+	  	if (AttackerInd == 1 && Player.WarMode())
+			Orion.WarMode(0);
+	
+		Orion.Say("No more bandages, script halted!");
+      Orion.Wait(1000);
+		
+		Idle()
+	}
+	
+	var partner = Orion.FindObject('SparringPartner');
+	
+	if (partner.Hits('%') == 100)
+		return
+
+	if (partner.Hits('%') < MaxPartnerHitsPrc)
+	{
+		Orion.Print('Partner lower than '  + MaxPartnerHitsPrc + '% !');
+		if (AttackerInd == 1 && Player.WarMode())
+			Orion.WarMode(0);
+	}
+
+	Orion.UseType(Bandage);
+	if (Orion.WaitForTarget(3000))
+		Orion.TargetObject('SparringPartner');
+}
+
+
+function WaitForHealth()
+{
+	if (DebugInd == 1) Orion.Print('Entering WaitForHealth Function!'); 
+	while (Player.Hits() < Player.MaxHits())
+	{
+		Orion.Wait(1000);
+	}
+}
+
+
+function Idle()
+{
+	if (DebugInd == 1) Orion.Print('Entering Idle Function!'); 
+	while(true)
+	{
+		Orion.Say('.accountage');
+		Orion.Wait(120000);
+	}
+}

@@ -1,140 +1,175 @@
-version = "1.0"
+// ==========================================
+// CONFIG
+// ==========================================
 
+var MAX_WEIGHT_PERCENT = 60;
 
+// SHOVEL SERIAL (do seu macro)
+var SHOVEL_SERIAL = '0x7C2478DA';
 
-//####################################################
-//	Parameters
-//####################################################
-var max_weight = 250;
-var mininmum_regs_amount = 10;
+// Clay location FIXO
+var CLAY_X = 2293;
+var CLAY_Y = 1198;
+var CLAY_Z = 0;
 
+// Bank location FIXO
+var BANK_X = 2276;
+var BANK_Y = 1200;
+var BANK_Z = 0;
 
-//####################################################
-//	START
-//####################################################
+var BANKER_SERIAL = '0x006AD500';
 
+// ==========================================
+// MAIN
+// ==========================================
 
-
-
-//####################################################
-//	SUPPORTING FUNCTIONS
-//####################################################
-function Clay_Mining()
+function AutoClay()
 {
-Orion.Print(count_regs(mininmum_regs_amount));
-if(count_regs(mininmum_regs_amount))
-	{
-	Orion.ActivateClient();
-	Orion.Print("120", "Not enough reagents to proceed - stopping script");
-	Orion.Terminate('Clay_Mining');
-	}	
-Setup()
-Orion.Wait(1000);
-recall("clay");
+    Orion.Print("Auto Clay iniciado.");
 
+    while (true)
+    {
+        // Vai para o ponto do clay
+        GoTo(CLAY_X, CLAY_Y, CLAY_Z);
 
+        // Minera até ficar pesado
+        MineClay();
 
-while(true)
-	{
-	if(Player.Weight() >= max_weight)
-		{
-		Orion.WalkTo(1520,1505);
-		Orion.Wait(2000);
-		recall("home");
-		Orion.Wait(2000);
-		offload();
-		if(count_regs(mininmum_regs_amount))
-			{
-			Orion.ActivateClient();
-			Orion.Print("120", "Not enough reagents to proceed - stopping script");
-			Orion.Terminate('Clay_Mining');
-			}
-		recall("Clay");
-		}
-	else
-		{
-		Orion.UseType("0x0F39", any, backpack);
-		Orion.WaitForTarget(2000);
-		Orion.TargetObject("self");
-		}
-	Orion.Wait(2000);
-	}
+        // Se estiver pesado → banco
+        if (IsHeavy())
+        {
+            Orion.Print("Indo ao banco...");
+            GoBank();
+        }
+
+        Orion.Wait(500);
+    }
 }
 
-function recall(destination)
+// ==========================================
+// MINERAR CLAY (IGUAL AO MACRO)
+// ==========================================
+
+function MineClay()
 {
-Orion.SetGlobal('gump_message', 'Recalling');
-if(destination == "home")
-	{
-	var rune = Orion.FindObject('home_rune');
-	}
-else
-	{
-	var rune = Orion.FindObject('clay_rune');
-	}
-serial = rune.Serial();
-Orion.ClearJournal
-Orion.Cast("Recall", serial);
-if (Orion.WaitJournal('spell fizzles|Select a target|already doing something else|concentration is disturbed', Orion.Now(), Orion.Now()+6000))
-	{
-	Orion.Wait(3000);
-	recall(destination);
-	}
+    while (!IsHeavy())
+    {
+        if (Player.Dead())
+            return;
+
+        Orion.ClearJournal();
+        var time = Orion.Now();
+
+        Orion.UseObject(SHOVEL_SERIAL);
+
+        if (Orion.WaitForTarget(2000))
+            Orion.TargetTile('any', 2293, 1198, 0);
+
+        Orion.WaitJournal(
+            "There is no more|You stop mining|You fail to find|You cant dig with this here",
+            time,
+            Orion.Now() + 10000
+        );
+
+        if (Orion.InJournal("There is no more"))
+        {
+            Orion.Print("Sem clay no local.");
+            return;
+        }
+
+        Orion.Wait(400);
+        Orion.ClearJournal();
+    }
 }
 
-function Setup()
+// ==========================================
+// BANCO
+// ==========================================
+
+function GoBank()
 {
-Orion.ActivateClient();
+    // Vai até a posição do banco
+    Orion.WalkTo(2277, 1198, 0);
+    Orion.Wait(1000);
 
-Orion.Print("Select home rune");
-Orion.AddObject('home_rune');
-Orion.WaitWhileTargeting();
+    // Vai até o banker pelo serial real
+    var banker = Orion.FindObject('0x006AD500');
 
-Orion.Print("Select clay rune");
-Orion.AddObject('clay_rune');
-Orion.WaitWhileTargeting();
+    if (!banker)
+    {
+        Orion.Print("Banker não encontrado.");
+        return;
+    }
+
+    //Orion.WalkTo(banker.X(), banker.Y(), banker.Z());
+    Orion.Wait(1000);
+
+    // Abre o banco
+    Orion.UseObject('0x006AD500');
+    Orion.Wait(1000);
+
+    var bank_gump = Orion.GetLastGump();
+
+    if (bank_gump)
+    {
+        bank_gump.Select(Orion.CreateGumpHook(1));
+        Orion.Wait(1000);
+    }
+
+    DepositClay();
+
+    Orion.Print("Clay guardado. Voltando...");
 }
 
-function offload()
+// ==========================================
+// DEPOSITAR CLAY
+// ==========================================
+
+function DepositClay()
 {
-	Orion.Wait(1000);
-	var clay = Orion.FindType('0x1BE9', "0x0609", backpack);
-	var floor_clay = Orion.FindType('0x1BE9', "0x0609", ground, "near");
-	floor_stack = Orion.FindObject(floor_clay[0]);
-		
-	if(floor_stack)
-	{
-		for(var i in clay)
-		{
-		Orion.DragItem(clay[i], 0);
-		Orion.Wait(100);
-		Orion.DropDraggedItem(floor_stack.Serial(), floor_stack.X(), floor_stack.Y(), floor_stack.Z());
-		}
-	}
-	else
-		Orion.Drop(clay[0]);
-	
-	Orion.Wait(1000);
-	
-	if(Orion.Count('0x1BE9', '0x0609' , backpack) > 0)
-	Orion.Drop(clay[0]);
-	
-	Orion.Wait(1000);
+    // COLOQUE AQUI O TYPE DO CLAY
+    var clay = Orion.FindType('0x1BE9', any, backpack);
+
+    if (clay)
+    {
+        for (var i = 0; i < clay.length; i++)
+        {
+            Orion.MoveItem(clay[i], 0, Player.BankSerial());
+            Orion.Wait(800);
+        }
+    }
 }
 
+// ==========================================
+// MOVIMENTO
+// ==========================================
 
-function count_regs(amount)
+function GoTo(x, y, z)
 {
-var mr = Orion.Count('0x0F86', any, backpack);
-var bm = Orion.Count('0x0F7B', any, backpack);
-var bp  = Orion.Count('0x0F7A', any, backpack);
+    Orion.WalkTo(x, y, z);
 
-if(mr < amount || bm <amount || bp <amount)
-	{
-	return true
-	}
-else
-	{
-	return false
-	}
+    var timeout = Orion.Now() + 10000;
+
+    while (Orion.GetDistance(x, y) > 1)
+    {
+        if (Orion.Now() > timeout)
+            break;
+
+        Orion.Wait(100);
+    }
 }
+
+// ==========================================
+// PESO 60%
+// ==========================================
+
+function IsHeavy()
+{
+    var percent = (Player.Weight() * 100) / Player.MaxWeight();
+
+    if (percent >= MAX_WEIGHT_PERCENT)
+        return true;
+
+    return false;
+}
+

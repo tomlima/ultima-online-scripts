@@ -1,0 +1,89 @@
+// Mining script By Tom Lima
+// Verision 1.0
+
+var ores = Orion.FindType("0x19B9"); // All ores 
+var regularOres = Orion.FindList("RegularOres");  // Just the best ores
+
+
+var maxWeight = 350;  
+var positions = [ 
+	{x : 381, y: 1443 },
+	{x : 385, y: 1436 },
+	{x : 381, y: 1429 },
+	{x : 376, y: 1431 }, 
+	{x:  371, y: 1435 },
+	{x:  360, y: 1438 },
+	{x:  352, y: 1446 },
+	{x:  362, y: 1449 },
+	{x:  383, y: 1441 },
+	{x:  366, y: 1441 },
+	{x:  388, y: 1436 },
+	{x:  349, y: 1455 },
+	{x:  378, y: 1435},
+	{x:  370, y: 1437}
+];
+
+var x;
+var y;
+var time = Orion.Now()
+var debug = 1;
+
+// Program start
+function Main() {
+	while(true){
+		CheckWeight();
+		MoveToPosition();
+		Work();
+	}
+}
+
+
+// Mine tiles
+function Work(){
+	 Orion.ClearJournal();
+	 Orion.UseType('0x0E85|0x0E86'); //Pickaxe
+	 if (Orion.WaitForTarget(10000))
+	 Orion.TargetTile('mine', x, y, Player.Z());
+	 Orion.Wait(500);
+	 Orion.WaitJournal("There is no more ore|There is no ore|You stop mining|That is too far away|is attacking you|You can not mine there|I am dead", time, Orion.Now() + 30000);
+	 
+	 if(Orion.InJournal("There is no more ore|There is no ore|That is too far away|You can not mine there")){
+	 	Orion.ClearJournal();
+		return 1;
+	 }
+}
+
+// Purge regular ores
+function PurgeOres(){
+	Orion.WalkTo(366,1474,2);
+	Orion.Wait(200);
+	if(regularOres.length > 0 ){
+	   Orion.Print("Drop ores");
+	   for(var i = 0; i < regularOres.length; i++){
+	   	   Orion.Print(regularOres[i]);
+	       Orion.DropHere(regularOres[i], 0);
+	   }
+	   Orion.Wait(200);
+	}
+	return 1;
+}
+
+// Check Weight 
+function CheckWeight(){
+	if(Player.Weight() >= maxWeight){
+		PurgeOres();
+		Orion.Wait(5000);
+		return 1;
+	}
+}
+
+// Move to some position
+function MoveToPosition()
+{
+	var i = Math.floor(Math.random() * 11) + 1;
+	position = positions[i];
+	x = position["x"];
+	y = position["y"]; 
+	Orion.WalkTo(x,y,1,0);
+	Orion.Wait(2000);
+}

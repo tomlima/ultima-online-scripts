@@ -1,0 +1,123 @@
+//===============================================================
+// Script Name: MageryResist
+// Author: Machiavel
+// Version: 1.0
+// Client Tested with: 2.0.0
+// Orion version tested with: 3.0.0.0
+// Shard OSI / FS: FS Neverlands Phoenix
+// Purpose: Casting poison fields and healing our partner
+//===============================================================
+var MsgColor = '0x0030'
+var DebugInd = 0
+//-----------------------------------------------------------------
+//var MinMana = 9
+//-----------------------------------------------------------------
+//-----------------------------------------------------------------
+
+function MageryResist()
+{
+	Orion.Print(MsgColor, 'Select your target!');
+	Orion.AddObject('MageryTrainingTarget');
+	Orion.WaitWhileTargeting();
+	
+	Orion.SetTimer('Meditation', 99999);
+	while (true)
+	{
+		if (Player.Mana() < Player.MaxMana())
+		//if (Player.Mana() < 19)
+			Medit()
+		    Cast("51")
+		Orion.Wait(200);
+	}
+}
+
+function Cast(spell)
+{
+	if (DebugInd == 1) Orion.Print('Entering Cast Function!');
+
+	while (true)
+	{
+		var time = Orion.Now();
+		Orion.ClearJournal();
+		Orion.WaitTargetObject('MageryTrainingTarget');
+		Orion.Cast(spell);
+
+		for (var i = 0; i < 20; i++)
+		{
+			if (Player.Mana() < Player.MaxMana())
+				return;
+			if (Orion.InJournal("spell fizzles|you_lost your concentration|You can't cast this spell", 'my|sys', '0', '0xFFFF', time, Orion.Now()) != null)
+				break;
+			else if (Orion.InJournal('Your hands must be free', 'my|sys', '0', '0xFFFF', time, Orion.Now()) != null)
+			{
+				Orion.Say('.quip 2');
+				break;
+			}
+			Orion.Wait(1000);
+		}
+		Orion.Wait(100);
+	}
+}
+
+
+
+
+function Medit()
+{
+	//if (DebugInd == 1) Orion.Print('Entering Medit Function!');
+	
+	Orion.WarMode(0);
+	
+	while (true)
+	{
+		while(Orion.Timer('Meditation') < 11000)
+		{
+			Orion.Wait(200);
+		}
+	
+		Orion.Wait(1000);
+		
+		if (Player.Mana() == Player.MaxMana())
+			return
+		
+		Orion.ClearJournal();
+		var time = Orion.Now()
+	
+		Orion.UseSkill('Meditation');
+		
+		Orion.WaitJournal("You cant focus|You start to meditate|You must wait to perform another action", time, Orion.Now() + 5000);
+		
+		if (Orion.InJournal('You cant focus', '', '0', 'any', time, Orion.Now()) != null)
+		{
+			//Orion.Print('cant focus');
+			Orion.SetTimer('Meditation');
+		}
+		else if (Orion.InJournal('You start to meditate', '', '0', 'any', time, Orion.Now()) != null)
+		{
+			//Orion.Print('Start to medit');
+			Orion.SetTimer('Meditation');
+			while(Player.Mana() < Player.MaxMana())
+			{
+				Orion.Wait(500);
+			}
+			return
+		}
+		Orion.Wait(500);
+	}
+}
+
+
+
+function MeditOld()
+{
+	//if (Orion.TimerExists('Anatomy') && Orion.Timer('Anatomy') < 10000)
+	//while (!(Orion.TimerExists('Anatomy') && Orion.Timer('Anatomy') < 10000))
+	//{
+	Orion.UseSkill('Meditation');
+	while(Player.Mana() < Player.MaxMana())
+	{
+		Orion.Wait(200);
+	}
+	//Orion.Wait(200);
+	//}
+}

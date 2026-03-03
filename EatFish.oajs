@@ -1,7 +1,8 @@
 function EatFish()
 {
-    while (!Player.Dead()){
-        Orion.UseType('0x097B', '0x0000', backpack );
-        Orion.Wait(100);
-    }
+while (!Player.Dead())
+{
+Orion.UseType('0x097B', '0x0000', backpack );
+Orion.Wait(1);
+}
 }

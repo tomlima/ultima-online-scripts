@@ -1,0 +1,87 @@
+// ==========================================================================
+// Treino Remove Trap Inteligente - OrionUO
+// Continua tentando até remover com sucesso
+// Respeita cooldown de 10s e mana mínima
+// ==========================================================================
+
+var MANA_NECESSARIA = 6;
+var COOLDOWN_REMOVE = 10000; // 10 segundos
+var DELAY_CAST = 5200;
+var DELAY_REMOVE = 1000;
+
+var pouchSerial = null;
+
+// ==========================================================================
+// MAIN
+// ==========================================================================
+function main() {
+
+    Orion.Print(43, "Selecione a pouch para treinar Remove Trap...");
+
+    Orion.AddObject('TargetPouch');
+    Orion.WaitWhileTargeting();
+
+    var pouch = Orion.FindObject('TargetPouch');
+
+    if (!pouch) {
+        Orion.Print(33, "Nenhuma pouch selecionada.");
+        return;
+    }
+
+    pouchSerial = pouch.Serial();
+
+    Orion.Print(53, "Treino iniciado. Pressione STOP para parar.");
+
+    while (true) {
+
+        // =====================================
+        // Espera mana suficiente
+        // =====================================
+        waitForMana();
+
+        // =====================================
+        // CAST MAGIC TRAP
+        // =====================================
+        Orion.Cast("Magic Trap");
+        Orion.WaitTargetObject(pouchSerial);
+        Orion.Wait(DELAY_CAST);
+
+        // =====================================
+        // TENTA REMOVER ATÉ CONSEGUIR
+        // =====================================
+        var removed = false;
+
+        while (!removed) {
+
+            Orion.ClearJournal();
+
+            Orion.UseSkill("Remove Trap");
+            Orion.WaitTargetObject(pouchSerial);
+            Orion.Wait(DELAY_REMOVE);
+
+            // Espera resposta no journal
+            Orion.Wait(500);
+
+            if (Orion.InJournal("You successfully removed the chest's traps!")) {
+                removed = true;
+                Orion.Print(63, "Trap removida com sucesso!");
+            } else {
+                Orion.Print(33, "Falhou... tentando novamente após cooldown.");
+            }
+              Orion.Wait(COOLDOWN_REMOVE);
+        }
+
+        // Pequena pausa antes do próximo ciclo
+        Orion.Wait(800);
+    }
+}
+
+// ==========================================================================
+// FUNÇÃO ESPERAR MANA
+// ==========================================================================
+function waitForMana() {
+    while (Player.Mana() < MANA_NECESSARIA) {
+        Orion.Print(33, "Aguardando mana...");
+        Orion.Wait(1000);
+    }
+}

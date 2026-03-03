@@ -1,0 +1,121 @@
+const ToolType = '0x1035'; // inshaves
+const MaterialType = '0x1BD7'; // boards
+var Halt = false;
+const TrashCan = Orion.FindType('0x0E77', 'any', ground, '', 2);
+var MaterialToUse;
+var ToolToUse;
+var Trash;
+const BlankScrolls = false;
+const ItemsToTrash = '0x0E34|0x13F9';
+const DropBox = '0x54F40CC9';
+
+function Autostart() {
+	Orion.UseObject('backpack');
+	Orion.Wait(4000);
+	Main();
+}
+
+function Main() {
+    while (!Halt) {
+    	StartFindRequiredItems();
+	   	Orion.Wait(1000);
+    	DumpCraftedItems()
+    	var ItemIdToCraft = DecideWhatToMake();
+        Orion.Wait(1000);
+        CraftItems(ItemIdToCraft);
+        WaitUntilDone();
+    }
+}
+
+function StartFindRequiredItems() {
+    ToolToUse = Orion.FindType(ToolType, 'any', backpack);
+   	MaterialToUse = Orion.FindType(MaterialType, 'any', ground, '', 1);
+    if (ToolToUse.length < 1 || ToolToUse.length == null) {
+        Orion.Print('No tools found! Script halt');
+		Halt = true;
+    }
+}
+
+function WaitUntilDone() {
+	Orion.Wait(1000);
+	Orion.ClearJournal();
+	var stay = true;
+	while (stay) {
+		if (Orion.InJournal('have the resources|stop smithing|You dont have enough wood to make that')) {
+			Orion.ClearJournal();
+			break;
+		}
+		Orion.EmoteAction('bow');
+		Orion.Wait(3000);
+		Orion.UseType(ToolType);
+		if (Orion.WaitForGump(1000)) {
+	        var gump0 = Orion.GetGump('last');
+	        if (gump0 !== null) {
+	            var gumpHook0 = Orion.CreateGumpHook(1026); // cancel
+	            gump0.Select(gumpHook0);
+	            Orion.Wait(1000);
+	            stay = false;
+	        }
+	    }
+	}
+}
+
+function DumpCraftedItems() {
+    _findList = Orion.FindType(ItemsToTrash, 'any', backpack);
+    Orion.Print(_findList.length + " items to deposit.");
+    for (var i = 0; i < _findList.length; i++) {
+    	if (Trash) {
+    		Orion.MoveItem(_findList[i], 0, TrashCan);
+    	}
+        else {
+        	Orion.MoveItem(_findList[i], 0, DropBox);
+        }
+        Orion.Wait(250);
+    }
+}
+
+function CraftItems(ItemIdToCraft) {
+    Orion.Wait('500');
+    Orion.UseObject(ToolToUse);
+    if (Orion.WaitForGump(1000)) {
+        var gump0 = Orion.GetGump('last');
+        if (gump0 !== null) {
+            var gumpHook0 = Orion.CreateGumpHook(ItemIdToCraft);
+            gumpHook0.AddEntry(513, 100);
+            gump0.Select(gumpHook0);
+        }
+    }
+    if (Orion.WaitForTarget(4000)) {
+        Orion.Wait(500);
+        Orion.TargetObject(MaterialToUse);
+    }
+}
+
+// Consider using switch case
+function DecideWhatToMake() {
+	if (BlankScrolls) {
+		Trash = false;
+		return 3636;
+	}
+	var skillAmount = Orion.SkillValue('Carpentry');
+	Orion.Wait(200);
+	if (skillAmount > 329 && skillAmount < 750) {
+		Trash = false;
+		return 3636; // blank scrolls
+	}
+	if (skillAmount > 749 && skillAmount < 800) {
+		Trash = true;
+		return 5113;// gnarled staves
+	}
+	if (skillAmount > 799 && skillAmount < 900) {
+		Trash = true;
+		return 3713;// crooks
+	}
+	if (skillAmount > 899 && skillAmount < 1000) {
+		Trash = true;
+		return 2628;// vanity dressers/crooks
+	}
+	if (skillAmount > 999) {
+		Halt = true;
+	}
+ }

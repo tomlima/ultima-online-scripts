@@ -1,6 +1,8 @@
-function UseJewelry(){
-    while (!Player.Dead()){
-        Orion.UseType('0x108A|0x1086|0x1087|0x1089', '0x0000', backpack );
-        Orion.Wait(100);
-    }
+function UseJewelry()
+{
+while (!Player.Dead())
+{
+Orion.UseType('0x108A|0x1086|0x1087|0x1089|0x1088', '0x0000', backpack );
+Orion.Wait(1);
+}
 }

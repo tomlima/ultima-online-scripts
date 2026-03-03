@@ -1,15 +1,33 @@
-// Misc functions  
-// Version 1.0
-// Author: Tom Lima
-// This script is a set of usefull misc scripts. Enjoy! :D 
+// ==========================================
+// This function use provocation
+// ==========================================
+
+function Provocation() {
+ 	Orion.UseSkill("Provocation");
+}
 
 
-// ----------------------------------------------------
-// FollowPlayer
-// This function open a target to 
-// follow a player. 
-function FollowPlayer(){
-	Orion.AddObject('target');
+// ==========================================
+// This function just  follow a target.
+// ==========================================
+
+function FollowTarget() {
+ 	Orion.AddObject('target');
 	Orion.WaitWhileTargeting(); 
 	Orion.Follow('target');
+}
+
+
+// ==========================================
+// This recall to home
+// ==========================================
+
+function RecallHome(){
+	Orion.Say(".quip 2"); 
+	Orion.Wait(300);
+	Orion.Cast("Recall");
+	if (Orion.WaitForTarget(3000))
+    {
+        Orion.TargetObject("0x7AD77C6C");
+    }
 }

@@ -1,0 +1,40 @@
+// =================================
+// Stack itens
+// Version 1.0
+// Author: Tom Lima
+// This script is used to stack items of the same type.
+// Shard: Neverlands Heritage
+// 
+// How to use: 
+// You need to replace GRAPH with the type of item you want to stack.
+// 
+// ==================================
+
+// ---- CONFIG ----
+var GRAPHIC = "0x14EB";   // Maps graphic 
+var DRAG_DELAY = 500;
+var DROP_DELAY = 500;
+
+function main(){
+	var itens = Orion.FindType(GRAPHIC,"any", backpack);
+	if(itens.length > 0 ){
+		Orion.Print("Itens found: " + itens.length);
+		var base = itens[0];
+		var dest = Orion.FindObject(base);
+		
+		for(var i = 1; i < itens.length; i++){
+			 var current = itens[i];
+			 
+	        if (!Orion.ObjectExists(current))
+	            continue;
+	
+	        Orion.DragItem(current, 1);
+	        Orion.Wait(DRAG_DELAY);
+	
+	        Orion.DropDraggedItem(base, dest.X(), dest.Y());
+	        Orion.Wait(DROP_DELAY);
+		}
+	}else{
+		Orion.Print("Itens not found");
+	}
+}

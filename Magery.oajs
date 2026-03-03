@@ -1,53 +1,68 @@
-//20 Poison
-//36 reflect
-//42 energy bolt
-//46 mass curse
-//51 fs
-//53 mana vamp
-//59 res
-const spell = '46';
-const stopAt = Player.MaxMana() * 0.9;
-Orion.WaitForAddObject('target', 5000);
-var target = Orion.FindObject('target');
+// ===== CONFIGURAÇÃO =====
+const MEDIT_SKILL = '46'; // Meditation
+const spell = 51; // mass curse
+const BANDAGE_TYPE = '0x0E21';
 
-function start(){
-   while(!Player.Dead())
-   {
-		if((Player.Mana() > stopAt && Orion.Timer('medit') > 8500) || Orion.Timer('medit') < 2)
-			Orion.Cast(spell);
-		
-		if (Orion.WaitJournal('spell|fizzles', Orion.Now(), Orion.Now() + 2000, 'me|sys') || Orion.WaitForTarget(3000))
-			Orion.TargetObject(target.Serial());			
-			
-		Orion.Wait(500);
+const START_MEDIT_AT = Player.MaxMana() * 0.65;
+const MIN_LIFE_PERCENT = 60;
 
-		if(Player.Mana() < stopAt)
-		{
-			medit();
-		}
-	}
+
+// ===== HEAL CONTÍNUO =====
+function EmergencyHeal()
+{
+    while (!Player.Dead() &&
+          ((Player.Hits() / Player.MaxHits()) * 100) < MIN_LIFE_PERCENT)
+    {
+        Orion.Print("Vida abaixo de 50%! Curando...");
+
+        Orion.UseType(BANDAGE_TYPE);
+        Orion.WaitForTarget(2000);
+        Orion.TargetObject(Player.Serial());
+
+        Orion.Wait(3200);
+    }
 }
 
-function medit(){
-	while(Player.Mana() < Player.MaxMana())
-		{
-			
-				if(Player.Mana() < Player.MaxMana() * 0.7 && Orion.Timer('medit') > 10000) {
-				  Orion.UseSkill('46');
-				   Orion.SetTimer('medit');
-			   }
 
-			
-			if(Player.Hits() < Player.MaxHits() && Player.Mana() > Player.MaxMana() * 0.7) {
-				Heal()
-			}				
-			Orion.Wait(500);
-		}
-}
+// ===== FUNÇÃO PRINCIPAL =====
+function main()
+{
+    Orion.WaitForAddObject('target', 5000);
+    var target = Orion.FindObject('target');
 
-function Heal() {
-	Orion.UseType('0x0E21', '0xFFFF', backpack);
-	Orion.WaitForTarget(3000);
-	Orion.TargetObject('self');
-	Orion.WaitJournal('Your patient|full health|successfully|healed', Orion.Now(), Orion.Now() + 15000, 'me|sys');
+    while (!Player.Dead())
+    {
+        // PRIORIDADE MÁXIMA: HEAL
+        EmergencyHeal();
+
+        // =========================
+        // CAST
+        // =========================
+        if (Player.Mana() > START_MEDIT_AT)
+        {
+            Orion.Cast(spell);
+
+            if (Orion.WaitJournal('spell|fizzles', Orion.Now(), Orion.Now() + 2000, 'me|sys') ||
+                Orion.WaitForTarget(3000))
+            {
+                Orion.TargetObject(target.Serial());
+            }
+
+            Orion.Wait(500);
+            continue;
+        }
+
+        // =========================
+        // MEDIT ATÉ 100%
+        // =========================
+        while (Player.Mana() < Player.MaxMana())
+        {
+            EmergencyHeal(); // protege enquanto medita
+
+            Orion.UseSkill(MEDIT_SKILL);
+            Orion.Wait(500);
+        }
+
+        Orion.Wait(300);
+    }
 }

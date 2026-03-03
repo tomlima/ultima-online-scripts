@@ -1,0 +1,17 @@
+function Main(){
+	while(!Player.Dead()){
+		var horses = Orion.FindType('0x00CC|0x00E4', '0xFFFF', 'any','mobile');
+		if(horses.length > 0){
+			for( var i = 0; i< horses.length; i++ ){
+				Orion.Print("Healing horse " + i);
+				Orion.UseType('0x0E21');
+				if (Orion.WaitForTarget(2000))
+            	Orion.TargetObject(horses[i]);
+				Orion.Wait(8000);
+			}
+		}else{
+			Orion.Print("There is no horses")
+			break;
+		}
+	}
+}

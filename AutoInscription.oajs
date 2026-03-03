@@ -1,0 +1,91 @@
+// =================================
+// Auto inscription
+// Version 1.0
+// Author: Tom Lima
+// 
+// -------------------------------------------------------------
+//     			   _____  _____
+//    			_/         Y          \_
+//   		   // ~~ ~   | ~~ ~  \\
+//           // ~ ~ ~~ | ~~~ ~ \\      
+//          //_______ .|._______\\     
+//	        `-----------`- '-----------'
+//
+//
+// ==================================
+
+
+var GUMP_ID = 0x0025958D;
+var BUTTON_MAKE_LAST = 401;
+var BLANK_SCROLL = 0x0E34;
+
+var MANA_LIMIT = 500;
+
+var CRAFT_DELAY = 20000;
+var LOOP_DELAY  = 250;
+
+
+
+function OpenInscription() {
+    Orion.UseSkill("Inscription");
+}
+
+
+/* ---------- MAKE LAST ---------- */
+
+function ClickMakeLast() {
+
+    if (Orion.WaitForGump(1000)) {
+
+        var gump = Orion.GetLastGump();
+        Orion.Print(gump.ID());
+        if (gump !== null) {
+           Orion.Print("teste");
+            var hook = Orion.CreateGumpHook(BUTTON_MAKE_LAST);
+            hook.AddEntry(200, "100");
+            gump.Select(hook);
+        }
+    }
+}
+
+
+/* ---------- TARGET  SCROLLS ---------- */
+
+function TargetScroll() {
+
+    if (Orion.WaitForTarget(1000)) {
+        Orion.TargetType(BLANK_SCROLL);
+    }
+}
+
+
+/* ---------- MEDIT ---------- */
+
+function MeditateIfNeeded() {
+    if (Player.Mana() < Player.MaxMana()) {
+        while (Player.Mana() < Player.MaxMana()) {
+            Orion.UseSkill("Meditation");
+            Orion.Wait(10000);
+        }
+    }
+}
+
+
+/* ---------- LOOP ---------- */
+
+function Start() {
+
+    while (true) {
+
+        MeditateIfNeeded();
+
+        OpenInscription();   // 1
+        ClickMakeLast();     // 2
+        TargetScroll();      // 3
+
+        Orion.Wait(CRAFT_DELAY);
+        Orion.Wait(LOOP_DELAY);
+    }
+}
+
+Start();
